@@ -108,6 +108,13 @@ public class CResourceHelper {
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Abbreviation", "Abbreviation", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Contact", "Contact", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Email", "Email", CFieldItem.FieldItemType.String));
+		
+		// Region information, in APIv1, can only be pulled
+		if(bReturnExportFields) { 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Region ID", "ID", CFieldItem.FieldItemType.Number, false, "Region"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Region Name", "Name", CFieldItem.FieldItemType.String, false, "Region"));
+		} // End if(bReturnExportFields)
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Archive", "Archive", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String));
 	}
@@ -117,30 +124,55 @@ public class CResourceHelper {
 	private static void getAPIFieldsForProjects(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Project data
 		int iOrder = 0;
+		
+		// If we're returning a GET list...
 		if(bReturnExportFields) { 
-			// ID is only part of a GET. Client ID is only a sub-node (<Client><ID></ID>...</Client>) on GETs
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); // Only part of a GET
+			// ID is only part of a GET
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number));
+			
+			// Client ID and Name are part of a sub-node (<Client><ID></ID>...</Client>) on GETs
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Client ID", "ID", CFieldItem.FieldItemType.Number, false, "Client"));
-		} else { // For POSTs, ClientID is an element of the main node.
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Client Name", "Name", CFieldItem.FieldItemType.String, false, "Client"));
+		} 
+		else { // For POSTs, ClientID is an element of the main node...
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Client ID", "ClientID", CFieldItem.FieldItemType.Number)); 
 		} // End if(bReturnExportFields)
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Name", "Name", CFieldItem.FieldItemType.String));
 		
-		// For GETs, Leader ID is a sub-node (<Leader><ID></ID>...</Leader>). For POSTs, LeaderID is an element of the main node.
-		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Leader ID", "ID", CFieldItem.FieldItemType.Number, false, "Leader")); } 
-		else { alReturnAPIFields.add(new CFieldItem(iOrder++, "Leader ID", "LeaderID", CFieldItem.FieldItemType.Number)); }
+		// If we're returning a GET list...
+		if(bReturnExportFields) {
+			// Leader ID and Name are part of a sub-node (<Leader><ID></ID>...</Leader>)
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Leader ID", "ID", CFieldItem.FieldItemType.Number, false, "Leader")); 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Leader Name", "Name", CFieldItem.FieldItemType.String, false, "Leader"));
+		}
+		else { // For POSTs, LeaderID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Leader ID", "LeaderID", CFieldItem.FieldItemType.Number)); 
+		} // End if(bReturnExportFields)
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Status", "Status", CFieldItem.FieldItemType.String));
+
+		// If we're returning a GET list...
+		if(bReturnExportFields) {
+			// Project Group information is only part of the GET in API v1
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Group ID", "ID", CFieldItem.FieldItemType.Number, false, "ProjectGroup")); 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Group Name", "Name", CFieldItem.FieldItemType.String, false, "ProjectGroup"));
+		} // End if(bReturnExportFields)
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Start Date", "StartDate", CFieldItem.FieldItemType.Date));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "End Date", "EndDate", CFieldItem.FieldItemType.Date));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Billing By", "BillingBy", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Cost", "FixedCost", CFieldItem.FieldItemType.Number));
 		
-		// For GETs, Currency ID is a sub-node (<Currency><ID></ID>...</Currency>). For POSTs, CurrencyID is an element of the main node.
-		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "Currency")); }
-		else { alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "CurrencyID", CFieldItem.FieldItemType.Number)); }
+		// For GETs, Currency ID is a sub-node (<Currency><ID></ID>...</Currency>). 
+		if(bReturnExportFields) { 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "Currency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "Currency"));
+		}
+		else { // For POSTs, CurrencyID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "CurrencyID", CFieldItem.FieldItemType.Number)); 
+		} // End if(bReturnExportFields)
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Budget Rate Date", "BudgetRateDate", CFieldItem.FieldItemType.Date));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Hide Tasks", "HideTasks", CFieldItem.FieldItemType.String));
@@ -149,6 +181,10 @@ public class CResourceHelper {
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Expenses Billable by Default", "ExpensesBillableByDefault", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Linked", "Linked", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "MSPConfig", "MSPConfig", CFieldItem.FieldItemType.String));
+
+		// The RSProject field is only part of a GET
+		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "RSProject", "RSProject", CFieldItem.FieldItemType.String)); }
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Archive", "Archive", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String));
 	}
@@ -160,10 +196,22 @@ public class CResourceHelper {
 		int iOrder = 0;
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); }// Only part of a GET
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Name", "Name", CFieldItem.FieldItemType.String));
+		
+		// If we're returning a GET list...
+		if(bReturnExportFields) {
+			// Task Group information is only part of the GET in API v1
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task Group ID", "ID", CFieldItem.FieldItemType.Number, false, "TaskGroup")); 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task Group Name", "Name", CFieldItem.FieldItemType.String, false, "TaskGroup"));
+		} // End if(bReturnExportFields)
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Force Description", "ForceDescription", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Global", "Global", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Prorate", "Prorate", CFieldItem.FieldItemType.Number));
+		
+		// The RSTask field is only part of a GET
+		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "RSTask", "RSTask", CFieldItem.FieldItemType.String)); }		
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "WBS", "WBS", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Archive", "Archive", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String));
@@ -177,22 +225,50 @@ public class CResourceHelper {
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); }// Only part of a GET
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Last Name", "LastName", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "First Name", "FirstName", CFieldItem.FieldItemType.String));
+
+		// If we're returning a GET list...
+		if(bReturnExportFields) {
+			// Team information is only part of the GET in API v1
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Team ID", "ID", CFieldItem.FieldItemType.Number, false, "Team")); 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Team Name", "Name", CFieldItem.FieldItemType.String, false, "Team"));
+		} // End if(bReturnExportFields)		
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage", "Wage", CFieldItem.FieldItemType.Number));
 		
-		// For GETs, Wage Currency ID is a sub-node (<WageCurrency><ID></ID>...</WageCurrency>). For POSTs, WageCurrencyID is an element of the main node.
-		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "WageCurrency")); }
-		else { alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency ID", "WageCurrencyID", CFieldItem.FieldItemType.Number)); }
+		// If we're returning a GET list...
+		if(bReturnExportFields) {
+			// For GETs, Wage Currency ID is a sub-node (<WageCurrency><ID></ID>...</WageCurrency>). 
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "WageCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "WageCurrency"));
+		}
+		else { // For POSTs, WageCurrencyID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency ID", "WageCurrencyID", CFieldItem.FieldItemType.Number)); 
+		} // End if(bReturnExportFields)
 
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Changed Date", "WageChangedDate", CFieldItem.FieldItemType.Date));		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge", "Charge", CFieldItem.FieldItemType.Number));
 		
-		// For GETs, Charge Currency ID is a sub-node (<ChargeCurrency><ID></ID>...</ChargeCurrency>). For POSTs, ChargeCurrencyID is an element of the main node.
-		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "ChargeCurrency"));  }
-		else { alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency ID", "ChargeCurrencyID", CFieldItem.FieldItemType.Number)); }
+		// If we're returning a GET list... 
+		if(bReturnExportFields) {
+			// For GETs, Charge Currency ID is a sub-node (<ChargeCurrency><ID></ID>...</ChargeCurrency>).
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "ChargeCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "ChargeCurrency"));
+		}
+		else { // For POSTs, ChargeCurrencyID is an element of the main node....
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency ID", "ChargeCurrencyID", CFieldItem.FieldItemType.Number)); 
+		} // End if(bReturnExportFields)
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Changed Date", "ChargeChangedDate", CFieldItem.FieldItemType.Date));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Start Date", "StartDate", CFieldItem.FieldItemType.Date));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "End Date", "EndDate", CFieldItem.FieldItemType.Date));
+
+		// If we're returning a POST list... 
+		if(!bReturnExportFields) {
+			// The UserID and Password can only be provided as part of a POST and will not be returned as part of a GET for security reasons
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "UserID", "UserID", CFieldItem.FieldItemType.String));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Password", "Password", CFieldItem.FieldItemType.String));
+		} // End if(!bReturnExportFields)
+		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Number", "Number", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Email", "Email", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "WorkDays", "WorkDays", CFieldItem.FieldItemType.String));
@@ -219,10 +295,16 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Sheet ID", "ID", CFieldItem.FieldItemType.Number, false, "Sheet"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Sheet Status", "Status", CFieldItem.FieldItemType.String, false, "Sheet"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Rejected Reason", "RejectedReason", CFieldItem.FieldItemType.String, false, "Sheet"));
+			
+			// The Project, Task, and Employees are returned as a Node containing the item's name too when doing a GET
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ID", CFieldItem.FieldItemType.Number, false, "Project"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Name", "Name", CFieldItem.FieldItemType.String, false, "Project"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task ID", "ID", CFieldItem.FieldItemType.Number, false, "Task"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task Name", "Name", CFieldItem.FieldItemType.String, false, "Task"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee ID", "ID", CFieldItem.FieldItemType.Number, false, "Employee"));
-		} else { // For POSTs, the ProjectID, TaskID, and EmployeeID are elements of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee Name", "Name", CFieldItem.FieldItemType.String, false, "Employee"));
+		} 
+		else { // For POSTs, the ProjectID, TaskID, and EmployeeID are elements of the main node...
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ProjectID", CFieldItem.FieldItemType.Number));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task ID", "TaskID", CFieldItem.FieldItemType.Number));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee ID", "EmployeeID", CFieldItem.FieldItemType.Number));
@@ -233,6 +315,18 @@ public class CResourceHelper {
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Stop Time", "StopTime", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Total Hours", "TotalHours", CFieldItem.FieldItemType.Number));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String));
+		
+		// If we're returning a GET list... 
+		if(bReturnExportFields) {
+			// The Charge, Wage, and Prorate fields are only part of a GET in API v1
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge", "Charge", CFieldItem.FieldItemType.Number));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "ChargeCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "ChargeCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage", "Wage", CFieldItem.FieldItemType.Number));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "WageCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "WageCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Prorate", "Prorate", CFieldItem.FieldItemType.Number));
+		} // End if(bReturnExportFields)
 		
 		// The Integrate value for Time Entries can only be specified for time that is approved via a PUT. POSTs create un-submitted/unapproved time
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String)); }		
@@ -253,10 +347,14 @@ public class CResourceHelper {
 			// The Sheet ID and Status are only part of GETs			
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Sheet ID", "ID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee ID", "ID", CFieldItem.FieldItemType.Number, false, "Employee", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee Name", "Name", CFieldItem.FieldItemType.String, false, "Employee", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager ID", "ID", CFieldItem.FieldItemType.Number, false, "Manager", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager Name", "Name", CFieldItem.FieldItemType.String, false, "Manager", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ID", CFieldItem.FieldItemType.Number, false, "Project", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Name", "Name", CFieldItem.FieldItemType.String, false, "Project", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Status", "Status", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
-		} else { // For POSTs, the EmployeeID, ManagerID, and ProjectID are elements of the main node...
+		}
+		else { // For POSTs, the EmployeeID, ManagerID, and ProjectID are elements of the main node...
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee ID", "EmployeeID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager ID", "ManagerID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ProjectID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
@@ -264,9 +362,10 @@ public class CResourceHelper {
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Title", "Title", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
-
+		
 		// The Check Date, Check Number, and Approver fields are only part of GETs
-		if(bReturnExportFields) { 
+		if(bReturnExportFields) {
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Reimbursed", "Reimbursed", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Check Date", "CheckDate", CFieldItem.FieldItemType.Date, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Check Number", "CheckNumber", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Approver", "Approver", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
@@ -281,7 +380,9 @@ public class CResourceHelper {
 			// ID is only part of GETs
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Expense Entry ID", "ID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Expense Category ID", "ID", CFieldItem.FieldItemType.Number, false, "ExpenseCategory", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
-		} else { // For POSTs, the ExpenseCategoryID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Expense Category Name", "Name", CFieldItem.FieldItemType.String, false, "ExpenseCategory", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
+		}
+		else { // For POSTs, the ExpenseCategoryID is an element of the main node...
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Expense Category ID", "ExpenseCategoryID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		} // End if(bReturnExportFields)
 		
@@ -292,16 +393,28 @@ public class CResourceHelper {
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Cost per Unit", "CostPerUnit", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Amount", "Amount", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		
-		// For GETs, Currency ID is a sub-node (<Currency><ID></ID>...</Currency>). For POSTs, CurrencyID is an element of the main node.
-		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "Currency", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES)); } 
-		else { alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "CurrencyID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES)); }
+		// If we're returning a GET list...  
+		if(bReturnExportFields) {
+			// For GETs, Currency ID is a sub-node (<Currency><ID></ID>...</Currency>).
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "Currency", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "Currency", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
+		} 
+		else { // For POSTs, CurrencyID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "CurrencyID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES)); 
+		} // End if(bReturnExportFields)
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Markup", "Markup", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Amount", "FixedAmount", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		
-		// For GETs, Fixed Currency ID is a sub-node (<FixedCurrency><ID></ID>...</FixedCurrency>). For POSTs, FixedCurrencyID is an element of the main node.
-		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "FixedCurrency", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES)); } 
-		else { alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Currency ID", "FixedCurrencyID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES)); } 
+		// If we're returning a GET list...
+		if(bReturnExportFields) {
+			// For GETs, Fixed Currency ID is a sub-node (<FixedCurrency><ID></ID>...</FixedCurrency>).
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "FixedCurrency", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "FixedCurrency", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
+		} 
+		else { // For POSTs, FixedCurrencyID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Fixed Currency ID", "FixedCurrencyID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES)); 
+		} // End if(bReturnExportFields)
 		
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Tax 1", "Tax1", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Tax 2", "Tax2", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
@@ -310,7 +423,8 @@ public class CResourceHelper {
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Billable", "Billable", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 				
 		// The Attachment Name is GET only. The Archive and Integrate values for Expense Entries can only be specified for expenses that are approved via a PUT. 
-		// POSTs create un-submitted/unapproved expenses.
+		// POSTs create un-submitted/unapproved expenses unless you specify the 'approved=T' query string but you *must* be logged in user the Administrator Data
+		// Access Token (the token in the Database Options view of DOVICO Timesheet/DOVICO Planning & Timesheet)
 		if(bReturnExportFields) {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Attachment Name", "AttachmentName", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Archive", "Archive", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
