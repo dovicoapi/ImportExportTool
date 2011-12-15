@@ -20,7 +20,9 @@ public class CCommonUILogic {
 	
 	private String m_sConsumerSecret = "";
 	private String m_sDataAccessToken = "";
-	
+	private Long m_lEmployeeID = null;
+	private String m_sEmployeeFirstName = "";
+	private String m_sEmployeeLastName = "";
 	
 	
 	// Overloaded constructor
@@ -71,26 +73,58 @@ public class CCommonUILogic {
 	
 	
 	// Called when the form is first displayed (windowOpened event)
-	public void handlePageLoad(String sConsumerSecret, String sDataAccessToken) 
+	/// <history>
+    /// <modified author="C. Gerard Gallant" date="2011-12-14" reason="Now receives lEmployeeID, sEmployeeFirstName, and sEmployeeLastName parameters. Also added logic to grab the employee id if we already have token values (for those who have already run this app before the employee id functionality was added in)"/>
+    /// </history>
+	public void handlePageLoad(String sConsumerSecret, String sDataAccessToken, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName) 
 	{ 
 		// Remember the preferences specified
 		m_sConsumerSecret = sConsumerSecret;
 		m_sDataAccessToken = sDataAccessToken;
+		m_lEmployeeID = lEmployeeID;
+		m_sEmployeeFirstName = sEmployeeFirstName;
+		m_sEmployeeLastName = sEmployeeLastName;
 		
-		// Tell the Settings pane what the settings are
-		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken);
+		// Determine if the tokens have values or not
+		boolean bIsConsumerSecretEmpty = m_sConsumerSecret.isEmpty();
+		boolean bIsDataAccessTokenEmpty = m_sDataAccessToken.isEmpty();
 		
 		
-		// If either value is empty then...
-		if(m_sConsumerSecret.isEmpty() || m_sDataAccessToken.isEmpty()) {
+		// Tell the Settings pane what the settings are (we are not concerned about the logged in employee's First and Last name in this app but rather than have
+		// to write upgrade code, like the code to come below, if that every changes, we grab and store the values just in case)
+		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken, m_lEmployeeID, m_sEmployeeFirstName, m_sEmployeeLastName);
+		
+		// If the Employee ID is 0 and the consumer secret and data access token have values then...(that means this application was run before the new functionality
+		// was added to the settings panel to grab the employee id/name and we now need to grab the employee id/name)
+		if(m_lEmployeeID == 0 && !bIsConsumerSecretEmpty && !bIsDataAccessTokenEmpty) {
+			// We need to query the Employee ID and the easiest way to do so is to leverage the functionality now built into the settings panel. If for some reason
+			// the validation fails then...
+			if(!m_pSettingsTab.validateSettingsData()) {
+				m_sConsumerSecret = "";
+				m_sDataAccessToken = "";
+			} else { // Validation was successful...
+				// Grab the Employee ID obtained from the API and then update the UI class telling it that the settings have been changed so that they can be saved 
+				m_lEmployeeID = m_pSettingsTab.getEmployeeID();
+				m_sEmployeeFirstName = m_pSettingsTab.getEmployeeFirstName();
+				m_sEmployeeLastName = m_pSettingsTab.getEmployeeLastName();
+	    		m_alSettingsChanged.actionPerformed(null);
+			} // End if(!m_pSettingsTab.validateSettingsData())
+		} // End if(m_lEmployeeID == 0 && !bIsConsumerSecretEmpty && !bIsDataAccessTokenEmpty)
+			
+		
+		// If either token value is empty then...
+		if(bIsConsumerSecretEmpty || bIsDataAccessTokenEmpty) {
 			// Make sure the Settings tab is selected
 			m_iSettingsTabIndex = 2;
 			m_pTabControl.setSelectedIndex(m_iSettingsTabIndex);
-		} // End if(m_sConsumerSecret.isEmpty() || m_sDataAccessToken.isEmpty())
+		} // End if(bIsConsumerSecretEmpty || bIsDataAccessTokenEmpty)
 	}	
 	
 	
 	// Tab's selection has been changed (NOTE: This gets called when the control is initially displayed and when the tab's selection is changed via code)
+	/// <history>
+    /// <modified author="C. Gerard Gallant" date="2011-12-14" reason="Now grabs the Employee ID, First Name, and Last Name from the settings panel"/>
+    /// </history>
 	private void handleTabsChanged() {
 		// If the previous tab was the Settings tab then...(user just tabbed off of the settings tab
 	    if(m_iPreviousTabIndex == m_iSettingsTabIndex)
@@ -101,6 +135,9 @@ public class CCommonUILogic {
 	    		// Grab the new settings values
 	    		m_sConsumerSecret = m_pSettingsTab.getConsumerSecret();
 	    		m_sDataAccessToken = m_pSettingsTab.getDataAccessToken();
+	    		m_lEmployeeID = m_pSettingsTab.getEmployeeID();
+	    		m_sEmployeeFirstName = m_pSettingsTab.getEmployeeFirstName();
+				m_sEmployeeLastName = m_pSettingsTab.getEmployeeLastName();
 	    		
 	    		// Update the UI class telling it that the settings have been changed (so that the settings can be saved and data reloaded - we need to do it this
 	    		// way rather than handling the load/save in the Setting panel because if the settings panel is used by an Applet, having a reference to 
@@ -124,4 +161,7 @@ public class CCommonUILogic {
 	// Methods returning the setting values
 	public String getConsumerSecret() { return m_sConsumerSecret; }
 	public String getDataAccessToken() { return m_sDataAccessToken; }
+	public Long getEmployeeID() { return m_lEmployeeID; }
+	public String getEmployeeFirstName() { return m_sEmployeeFirstName; }
+	public String getEmployeeLastName() { return m_sEmployeeLastName; }
 }

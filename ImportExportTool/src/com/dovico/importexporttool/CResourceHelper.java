@@ -64,23 +64,41 @@ public class CResourceHelper {
 	
 	
 	// Returns the URI needed for the POST based on the resource item
-	public static String getURIForResource(String sResource, boolean bReturnExportURI) {
-		String sURI = "";
+	/// <history>
+    /// <modified author="C. Gerard Gallant" date="2011-12-15" reason="Added the lEmployeeID parameter and updated the TimeEntryies/ExpenseEntries URI logic according to if we're importing or exporting and if the logged in user is the admin token"/>
+    /// </history>
+	public static String getURIForResource(String sResource, boolean bReturnExportURI, Long lEmployeeID) {
+		String sURI = "";		
 		
 		// Build the proper URI based on the Data Source value
 		if(sResource.equals(Constants.API_RESOURCE_ITEM_CLIENTS)){ sURI = CRESTAPIHelper.buildURI("Clients/", "", "1"); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_PROJECTS)){ sURI = CRESTAPIHelper.buildURI("Projects/", "", "1"); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TASKS)){ sURI = CRESTAPIHelper.buildURI("Tasks/", "", "1"); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ sURI = CRESTAPIHelper.buildURI("Employees/", "", "1"); }
-		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){ sURI = CRESTAPIHelper.buildURI("TimeEntries/", "", "1"); }
-		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ 
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){
+			
+			// If we are importing AND we are logged in with the Admin user token then set the query string to 'approved=T' so that the time is entered into the system
+			// approved (users don't have to log in and submit it). Else, leave the query string empty (if we're doing an import, the time will not be approved and
+			// users will need to log in and submit it)
+			String sQueryString = ((!bReturnExportURI && (lEmployeeID == Constants.ADMIN_TOKEN_EMPLOYEE_ID)) ? "approved=T" : "");
+			sURI = CRESTAPIHelper.buildURI("TimeEntries/", sQueryString, "1");
+			
+		} else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ 
+			
 			// If the URI was requested for an Export (GET) then...
-			if(bReturnExportURI) { sURI = CRESTAPIHelper.buildURI("ExpenseEntries/", "", "1"); }
-			else { // The URI is for an Import (POST)...
+			if(bReturnExportURI) { 
+				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/", "", "1"); 
+			} else { // The URI is for an Import (POST)...
+				// If we are logged in with the Admin user token then set the query string to 'approved=T' so that the expenses are entered into the system approved 
+				// (users don't have to log in and submit them). Else, leave the query string empty (if we're doing an import, the expenses will not be approved and
+				// users will need to log in and submit them)
+				String sQueryString = (lEmployeeID == Constants.ADMIN_TOKEN_EMPLOYEE_ID ? "approved=T" : "");
+				
 				// For Expense Entries, there are two POST URIs that can be used. The 'ExpenseEntries/' version requires that the Expense Sheet already exist.
 				// We want to use the 'ExpenseEntries/Sheet/' version because we want the Expense Sheet created for the Expense Entries we specify. 
-				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/Sheet/", "", "1");
+				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/Sheet/", sQueryString, "1");
 			} // End if(bReturnExportURI)
+			
 		} // End if
 		
 		// Return the URI to the caller

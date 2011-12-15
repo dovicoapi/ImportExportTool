@@ -73,7 +73,7 @@ public class CPanel_Import extends JPanel {
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("125px"),
-				RowSpec.decode("45px"),
+				RowSpec.decode("75px"),
 				FormFactory.DEFAULT_ROWSPEC,
 				RowSpec.decode("default:grow"),}));
 		
@@ -301,21 +301,41 @@ public class CPanel_Import extends JPanel {
 	
 	
 	// Called when the user clicks on the Import button 
+	/// <history>
+    /// <modified author="C. Gerard Gallant" date="2011-12-15" reason="Added a prompt if the logged in user token is not the admin user token and we are importing time/expenses. When using the Admin token, time/expenses are imported as approved time/expenses. Any other user token results in the time/expenses being imported as unsubmitted and I felt it was important for the user to be aware of that before they imported the data."/>
+    /// </history>
 	private void OnClick_cmdImport() {
 		// If the validation fails then...
 		if(!validateForImport()) { return; }
-		
-				
-		IImportFormatter.Result iResult = IImportFormatter.Result.AllOK;
-		BufferedReader brReader = null;
 		
 		String sResource = (String)m_ddlDestination.getSelectedItem();		
 		String sRootElementName = CResourceHelper.getRootElementNameForResource(sResource);
 		String sMainElementName = CResourceHelper.getMainElementNameForResource(sResource);
 		
-		// Determine if we're importing expense data
-		boolean bImportingExpenses = sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES);
+		// Grab the logged in employee id. If the logged in user's token is not the admin token then...
+		Long lEmployeeID = m_UILogic.getEmployeeID();
+		if(lEmployeeID != Constants.ADMIN_TOKEN_EMPLOYEE_ID) {
+			String sWarningMsg = "";
+			
+			// If we're importing time entries then...
+			if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)) {
+				sWarningMsg = "WARNING: The time will be imported as 'unsubmitted' because the user token specified is not the Administrator Data Access Token. Continue with the import?";
+			} else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){// If we're importing expense entries... 
+				sWarningMsg = "WARNING: The expenses will be imported as 'unsubmitted' because the user token specified is not the Administrator Data Access Token. Continue with the import?";
+			} // End if		
 		
+			// If we have a warning message then...
+			if(!sWarningMsg.isEmpty()) { 
+				// Ask the user if he/she wants to continue with the import. If NO then exit now.
+				if(JOptionPane.showConfirmDialog(null, sWarningMsg, "Warning", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) { return; }
+			} // End if(!sWarningMsg.isEmpty())
+		} // End if(lEmployeeID != Constants.ADMIN_TOKEN_EMPLOYEE_ID)
+		
+		
+		// Determine if we're importing expense data and if the logged in user is the Admin user token
+		boolean bImportingExpenses = sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES);
+		IImportFormatter.Result iResult = IImportFormatter.Result.AllOK;
+		BufferedReader brReader = null;
 		
 		try {
 			// Get the selected formatter object from the Format drop-down
@@ -352,7 +372,7 @@ public class CPanel_Import extends JPanel {
 			// Close off the root XML (e.g. </Clients>) and send the XML to the REST API to have the data inserted (POST). If an error was displayed to the user
 			// then flag that there was an error so that the user doesn't get the 'Done' prompt (so that the user doesn't have to deal with two prompts)
 			sXML += ("</" + sRootElementName + ">");
-			String sURI = CResourceHelper.getURIForResource(sResource, false);
+			String sURI = CResourceHelper.getURIForResource(sResource, false, lEmployeeID);
 			APIRequestResult arResult = CRESTAPIHelper.makeAPIRequest(sURI, "POST", sXML, m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken());
 			if(arResult.getDisplayedError()) { iResult = IImportFormatter.Result.Error; }
 		} 

@@ -26,7 +26,8 @@ public class Applet_Main extends JApplet {
 		return new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {  
 				// Call our Save Settings function
-				saveSettings(m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken());
+				saveSettings(m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken(), Long.toString(m_UILogic.getEmployeeID()), m_UILogic.getEmployeeFirstName(), 
+						m_UILogic.getEmployeeLastName());
 			}
 		};
 	}
@@ -43,18 +44,19 @@ public class Applet_Main extends JApplet {
 	}
 	
 	
-	// Called by the JavaScript to tell us what the settings are from the cookie (without signing this app we don't have permission to access Preferences so we're 
-	// doing a workaround instead) 
-	public void JSCallBackReturningSettingsData(String sConsumerSecret, String sUserToken, String sEmployeeListModeIsManagerView){
-		m_UILogic.handlePageLoad(sConsumerSecret, sUserToken);
+	// Called by the JavaScript to tell us what the settings are from the cookie/localStorage (without signing this app we don't have permission to access Preferences
+	// so we're doing a workaround instead) 
+	public void JSCallBackReturningSettingsData(String sConsumerSecret, String sUserToken, String sEmployeeID, String sEmployeeFirstName, String sEmployeeLastName){
+		m_UILogic.handlePageLoad(sConsumerSecret, sUserToken, Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName);
 	}
 	
 	
 	// Called when the user clicks on the Main tab after having been on the Settings tab and everything validated OK 
-	public void saveSettings(String sConsumerSecret, String sUserToken) {
+	public void saveSettings(String sConsumerSecret, String sUserToken, String sEmployeeID, String sEmployeeFirstName, String sEmployeeLastName) {
 		try{
+			// Tell the JS to save the settings data to a cookie or localStorage
 			JSObject winMain = JSObject.getWindow(this);
-			if(winMain != null){  winMain.call("saveTheSettingsData", new String[] { sConsumerSecret, sUserToken }); }	
+			if(winMain != null){  winMain.call("saveTheSettingsData", new String[] { sConsumerSecret, sUserToken, sEmployeeID, sEmployeeFirstName, sEmployeeLastName }); }	
 		}
 		catch(Throwable e){}
 	}

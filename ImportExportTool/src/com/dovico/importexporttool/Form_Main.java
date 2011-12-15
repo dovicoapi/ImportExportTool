@@ -47,8 +47,11 @@ public class Form_Main {
 				Preferences prefs = Preferences.userNodeForPackage(Form_Main.class);
 				String sConsumerSecret = prefs.get(Constants.PREFS_KEY_CONSUMER_SECRET, "");
 				String sDataAccessToken = prefs.get(Constants.PREFS_KEY_USER_TOKEN, "");
-								
-				m_UILogic.handlePageLoad(sConsumerSecret, sDataAccessToken); 
+				String sEmployeeID = prefs.get(Constants.PREFS_KEY_EMPLOYEE_ID, "0");
+				String sEmployeeFirstName = prefs.get(Constants.PREFS_KEY_EMPLOYEE_FIRST, "");
+				String sEmployeeLastName = prefs.get(Constants.PREFS_KEY_EMPLOYEE_LAST, "");
+												
+				m_UILogic.handlePageLoad(sConsumerSecret, sDataAccessToken, Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName); 
 			}
 		});
 		m_frmDovicoImportExport.setTitle("DOVICO - Import/Export Tool");
@@ -71,6 +74,9 @@ public class Form_Main {
 				Preferences prefs = Preferences.userNodeForPackage(Form_Main.class);
 				prefs.put(Constants.PREFS_KEY_CONSUMER_SECRET, m_UILogic.getConsumerSecret());
 				prefs.put(Constants.PREFS_KEY_USER_TOKEN, m_UILogic.getDataAccessToken());
+				prefs.put(Constants.PREFS_KEY_EMPLOYEE_ID, Long.toString(m_UILogic.getEmployeeID()));
+				prefs.put(Constants.PREFS_KEY_EMPLOYEE_FIRST, m_UILogic.getEmployeeFirstName());
+				prefs.put(Constants.PREFS_KEY_EMPLOYEE_LAST, m_UILogic.getEmployeeLastName());
 			}
 		};
 	}	

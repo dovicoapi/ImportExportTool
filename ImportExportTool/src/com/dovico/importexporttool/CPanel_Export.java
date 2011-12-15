@@ -44,9 +44,11 @@ public class CPanel_Export extends JPanel {
 	private static final long serialVersionUID = 1L;
 	
 	private JComboBox m_ddlDataSource = null;
+	private JButton m_cmdDateRangeStart = null;
+	private JButton m_cmdDateRangeFinish = null;
 	private JComboBox m_ddlFormat = null; 
 	private JTextField m_txtSaveAs = null;
-	
+		
 	private DefaultListModel m_lmFieldsModel = null;
 	private JList m_lstFields = null;	
 	
@@ -66,6 +68,10 @@ public class CPanel_Export extends JPanel {
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("default:grow"),
 				FormFactory.RELATED_GAP_COLSPEC,
+				FormFactory.DEFAULT_COLSPEC,
+				FormFactory.RELATED_GAP_COLSPEC,
+				ColumnSpec.decode("default:grow"),
+				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("25dlu"),
 				FormFactory.RELATED_GAP_COLSPEC,
 				ColumnSpec.decode("25dlu"),
@@ -74,12 +80,14 @@ public class CPanel_Export extends JPanel {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("default:grow"),
+				RowSpec.decode("125px:grow"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
-				RowSpec.decode("45px"),
+				FormFactory.RELATED_GAP_ROWSPEC,
+				FormFactory.DEFAULT_ROWSPEC,
+				RowSpec.decode("41px"),
 				FormFactory.DEFAULT_ROWSPEC,
 				RowSpec.decode("default:grow"),}));
 		
@@ -94,7 +102,7 @@ public class CPanel_Export extends JPanel {
 		m_ddlDataSource.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent arg0) { OnSelChanged_ddlDataSource(); }
 		});
-		this.add(m_ddlDataSource, "4, 2, 5, 1, fill, default");
+		this.add(m_ddlDataSource, "4, 2, 9, 1, fill, default");
 
 		
 		// Export Field controls:
@@ -110,7 +118,7 @@ public class CPanel_Export extends JPanel {
 		// growing/shrinking as it's used, we add the list to a scroll pane and add the scroll pane to the container.
 		JScrollPane spFields = new JScrollPane(m_lstFields);
 		spFields.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		this.add(spFields, "4, 4, fill, fill");
+		this.add(spFields, "4, 4, 5, 1, fill, fill");
 		
 		
 		JButton cmdFields = new JButton("Fields...");
@@ -120,26 +128,52 @@ public class CPanel_Export extends JPanel {
 		cmdFields.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent arg0) { OnClick_cmdFields(); } 
 		});		
-		this.add(cmdFields, "6, 4, 3, 1, default, top");
+		this.add(cmdFields, "10, 4, 3, 1, default, top");
+		
+		
+		// Date Range controls:
+		JLabel lblDateRange = new JLabel("Date Range:");
+		lblDateRange.setFont(new Font("Arial", Font.PLAIN, 11));
+		this.add(lblDateRange, "2, 6, left, default");
+		
+		m_cmdDateRangeStart = new JButton("N/A");
+		m_cmdDateRangeStart.setFont(new Font("Arial", Font.PLAIN, 11));
+		m_cmdDateRangeStart.setEnabled(false);
+		m_cmdDateRangeStart.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent arg0) { OnClick_cmdDateRangeStart(); } 
+		});
+		add(m_cmdDateRangeStart, "4, 6");
+		
+		JLabel lblDateRangeSep = new JLabel("-");
+		lblDateRangeSep.setFont(new Font("Arial", Font.PLAIN, 11));
+		add(lblDateRangeSep, "6, 6");
+		
+		m_cmdDateRangeFinish = new JButton("N/A");
+		m_cmdDateRangeFinish.setFont(new Font("Arial", Font.PLAIN, 11));
+		m_cmdDateRangeFinish.setEnabled(false);
+		m_cmdDateRangeFinish.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent arg0) { OnClick_cmdDateRangeFinish(); } 
+		});
+		add(m_cmdDateRangeFinish, "8, 6");
 		
 		
 		// Format controls:
 		JLabel lblFormat = new JLabel("Format:");
 		lblFormat.setFont(new Font("Arial", Font.PLAIN, 11));
-		this.add(lblFormat, "2, 6, left, default");
+		this.add(lblFormat, "2, 8, left, default");
 		
 		m_ddlFormat = new JComboBox(getFormatValues());
 		m_ddlFormat.setFont(new Font("Arial", Font.PLAIN, 11));
 		m_ddlFormat.addActionListener(new ActionListener() {
 		    public void actionPerformed(ActionEvent arg0) { OnSelChanged_ddlFormat(); }
 		});
-		this.add(m_ddlFormat, "4, 6, 5, 1, fill, default");
+		this.add(m_ddlFormat, "4, 8, 9, 1, fill, default");
 		
 		
 		// Save As controls:
 		JLabel lblSaveAs = new JLabel("Save As:");
 		lblSaveAs.setFont(new Font("Arial", Font.PLAIN, 11));
-		this.add(lblSaveAs, "2, 8, left, default");
+		this.add(lblSaveAs, "2, 10, left, default");
 		
 		m_txtSaveAs = new JTextField();
 		m_txtSaveAs.setEditable(false);
@@ -149,7 +183,15 @@ public class CPanel_Export extends JPanel {
 			@Override
 			public void mouseClicked(MouseEvent arg0) { OnClick_cmdSaveAs(); } // Call the Save As button's code when the text box is clicked
 		});
-		this.add(m_txtSaveAs, "4, 8, 3, 1, fill, default");
+		this.add(m_txtSaveAs, "4, 10, 7, 1, fill, default");
+		
+		JButton cmdSaveAs = new JButton("...");
+		cmdSaveAs.setToolTipText("Choose the file save location.");
+		cmdSaveAs.setFont(new Font("Arial", Font.PLAIN, 11));
+		cmdSaveAs.addActionListener(new ActionListener() { 
+			public void actionPerformed(ActionEvent arg0) { OnClick_cmdSaveAs(); } 
+		});
+		this.add(cmdSaveAs, "12, 10");
 		
 		
 		// Export button
@@ -158,15 +200,7 @@ public class CPanel_Export extends JPanel {
 		cmdExport.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent arg0) { OnClick_cmdExport(); } 
 		});
-		
-		JButton cmdSaveAs = new JButton("...");
-		cmdSaveAs.setToolTipText("Choose the file save location.");
-		cmdSaveAs.setFont(new Font("Arial", Font.PLAIN, 11));
-		cmdSaveAs.addActionListener(new ActionListener() { 
-			public void actionPerformed(ActionEvent arg0) { OnClick_cmdSaveAs(); } 
-		});
-		this.add(cmdSaveAs, "8, 8");
-		this.add(cmdExport, "6, 10, 3, 1");
+		this.add(cmdExport, "10, 12, 3, 1");
 	}
 	
 		
@@ -186,14 +220,45 @@ public class CPanel_Export extends JPanel {
 	
 	// Returns the available values for the Format drop-down
 	private IExportFormatter[] getFormatValues() {
-		IExportFormatter[] arrItems = {  new CFormatterCSV(), new CFormatterIIF() };
+		IExportFormatter[] arrItems = {  new CFormatterCSV() };
 		return arrItems;
 	}
 	
 	
-	// Called when the selection changes for the Data Source drop-down. Make sure the Fields list is emptied because the current fields no longer belong to the
-	// item that is now selected 
-	private void OnSelChanged_ddlDataSource() { m_lmFieldsModel.clear(); }
+	// Called when the selection changes for the Data Source drop-down
+	private void OnSelChanged_ddlDataSource() {
+		// Make sure the Fields list is emptied because the current fields no longer belong to the item that is now selected 
+		m_lmFieldsModel.clear(); 
+
+		
+		boolean bEnableDateRangeControls = false;
+		String sStartDateCaption = "N/A", sFinishDateCaption = "N/A";
+		
+		// If the Time Entry selection was chosen then...
+		String sResource = (String)m_ddlDataSource.getSelectedItem();
+		if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){
+			// Flag that we want the Date Range controls enabled
+			bEnableDateRangeControls = true;
+			sStartDateCaption = "<in the works>";//fix_me...what is the proper date?
+			sFinishDateCaption = "<in the works>";//fix_me...what is the proper date? also, have a member variable for the actual dates?
+		} // End if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES))
+		
+		
+		// Adjust the Start date range button's enabled state and caption 
+		m_cmdDateRangeStart.setEnabled(bEnableDateRangeControls);
+		m_cmdDateRangeStart.setText(sStartDateCaption);
+		
+		// Adjust the Finish date range button's enabled state and caption
+		m_cmdDateRangeFinish.setEnabled(bEnableDateRangeControls);
+		m_cmdDateRangeFinish.setText(sFinishDateCaption);
+	}
+	
+	
+	// Called when the user clicks on the Start Date Range button 
+	private void OnClick_cmdDateRangeStart() { JOptionPane.showMessageDialog(null, "This functionality is not yet complete", "Info", JOptionPane.INFORMATION_MESSAGE); }
+	
+	// Called when the user clicks on the Finish Date Range button
+	private void OnClick_cmdDateRangeFinish() { JOptionPane.showMessageDialog(null, "This functionality is not yet complete", "Info", JOptionPane.INFORMATION_MESSAGE); }
 	
 	
 	// Called when the selection changes for the Format drop-down. Make sure the Save As text box is cleared because the format no longer applies to the item that
@@ -255,11 +320,12 @@ public class CPanel_Export extends JPanel {
 		BufferedWriter bwWriter = null;
 				
 		try {
-			// Get the selected formatter object from the Format drop-down
+			// Get the selected formatter object from the Format drop-down and get the selected DataSource (if we are exporting Clients, Projects, Tasks, etc)
 			IExportFormatter fFormatter = (IExportFormatter)m_ddlFormat.getSelectedItem();
-
 			String sDataSource = (String)m_ddlDataSource.getSelectedItem();
-			String sURI = CResourceHelper.getURIForResource(sDataSource, true);
+
+// fix_me...the following will need to receive date range parameters if we are dealing with a time entry export
+			String sURI = CResourceHelper.getURIForResource(sDataSource, true, m_UILogic.getEmployeeID());
 			String sMainElementName = CResourceHelper.getMainElementNameForResource(sDataSource);			
 			ArrayList<CFieldItem> alFields = getFieldItemsArrayList();
 			
