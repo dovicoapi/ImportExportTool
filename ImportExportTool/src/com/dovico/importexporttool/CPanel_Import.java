@@ -372,7 +372,7 @@ public class CPanel_Import extends JPanel {
 			// Close off the root XML (e.g. </Clients>) and send the XML to the REST API to have the data inserted (POST). If an error was displayed to the user
 			// then flag that there was an error so that the user doesn't get the 'Done' prompt (so that the user doesn't have to deal with two prompts)
 			sXML += ("</" + sRootElementName + ">");
-			String sURI = CResourceHelper.getURIForResource(sResource, false, lEmployeeID);
+			String sURI = CResourceHelper.getURIForResource(sResource, false, lEmployeeID, null, null);//the dates are not used by an import
 			APIRequestResult arResult = CRESTAPIHelper.makeAPIRequest(sURI, "POST", sXML, m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken());
 			if(arResult.getDisplayedError()) { iResult = IImportFormatter.Result.Error; }
 		} 

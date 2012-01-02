@@ -22,4 +22,7 @@ public class Constants {
 	
 	
 	public static Long ADMIN_TOKEN_EMPLOYEE_ID = 99L;
+	
+	// The REST API returns and expects dates in this format
+	public static String XML_DATE_FORMAT = "yyyy-MM-dd";
 }

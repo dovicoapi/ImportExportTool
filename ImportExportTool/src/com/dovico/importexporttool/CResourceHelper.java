@@ -1,6 +1,8 @@
 package com.dovico.importexporttool;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import com.dovico.commonlibrary.CRESTAPIHelper;
 
@@ -66,8 +68,9 @@ public class CResourceHelper {
 	// Returns the URI needed for the POST based on the resource item
 	/// <history>
     /// <modified author="C. Gerard Gallant" date="2011-12-15" reason="Added the lEmployeeID parameter and updated the TimeEntryies/ExpenseEntries URI logic according to if we're importing or exporting and if the logged in user is the admin token"/>
-    /// </history>
-	public static String getURIForResource(String sResource, boolean bReturnExportURI, Long lEmployeeID) {
+	/// <modified author="C. Gerard Gallant" date="2012-01-02" reason="Added the dtDateRangeStart and dtDateRangeEnd parameters. Adjusted the export time entries URI to include the date range."/>
+	/// </history>
+	public static String getURIForResource(String sResource, boolean bReturnExportURI, Long lEmployeeID, Date dtDateRangeStart, Date dtDateRangeEnd) {
 		String sURI = "";		
 		
 		// Build the proper URI based on the Data Source value
@@ -77,11 +80,17 @@ public class CResourceHelper {
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ sURI = CRESTAPIHelper.buildURI("Employees/", "", "1"); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){
 			
-			// If we are importing AND we are logged in with the Admin user token then set the query string to 'approved=T' so that the time is entered into the system
-			// approved (users don't have to log in and submit it). Else, leave the query string empty (if we're doing an import, the time will not be approved and
-			// users will need to log in and submit it)
-			String sQueryString = ((!bReturnExportURI && (lEmployeeID == Constants.ADMIN_TOKEN_EMPLOYEE_ID)) ? "approved=T" : "");
-			sURI = CRESTAPIHelper.buildURI("TimeEntries/", sQueryString, "1");
+			// If the URI was requested for an Export (GET) then...
+			if(bReturnExportURI) {
+				// Build up the URI with the date range query string
+				sURI = CRESTAPIHelper.buildURI("TimeEntries/", buildDateRangeQueryString(dtDateRangeStart, dtDateRangeEnd), "1");
+			} else { // The URI is for an Import (POST)...
+				// If we are logged in with the Admin user token then set the query string to 'approved=T' so that the time is entered into the system
+				// approved (users don't have to log in and submit it). Else, leave the query string empty (if we're doing an import, the time will not be approved and
+				// users will need to log in and submit it)
+				String sQueryString = (lEmployeeID == Constants.ADMIN_TOKEN_EMPLOYEE_ID ? "approved=T" : "");
+				sURI = CRESTAPIHelper.buildURI("TimeEntries/", sQueryString, "1");
+			} // End if(bReturnExportURI)
 			
 		} else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ 
 			
@@ -448,5 +457,15 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Archive", "Archive", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		} // End if(bReturnExportFields)
+	}
+	
+	
+	// Helper to return a Date Range query string
+	private static String buildDateRangeQueryString(Date dtDateRangeStart, Date dtDateRangeEnd){
+		// Create a Date formatter object that will turn a date into the XML Date Format string expected by the API
+		SimpleDateFormat fFormatter = new SimpleDateFormat(Constants.XML_DATE_FORMAT);
+		
+		// Return the date range query string with an encoded space between both dates
+		return ("daterange="+ fFormatter.format(dtDateRangeStart) + "%20"+ fFormatter.format(dtDateRangeEnd));
 	}
 }

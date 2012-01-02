@@ -8,7 +8,10 @@ import java.awt.event.MouseEvent;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -54,12 +57,20 @@ public class CPanel_Export extends JPanel {
 	
 	// Will hold a reference to the UI Logic parent class
 	private CCommonUILogic m_UILogic = null;
+	
+	// The Start and End dates of the date range when dealing with the Time Entry export
+	private Date m_dtDateRangeStart = null;
+	private Date m_dtDateRangeEnd = null;
 
 	
 	// Default constructor
 	public CPanel_Export(CCommonUILogic UILogic) {
 		// Remember the reference to the UI Logic parent class
 		m_UILogic = UILogic;
+		
+		// Default the date range to be today's date
+		m_dtDateRangeStart = new Date();
+		m_dtDateRangeEnd = new Date();
 		
 		
 		this.setLayout(new FormLayout(new ColumnSpec[] {
@@ -229,7 +240,6 @@ public class CPanel_Export extends JPanel {
 	private void OnSelChanged_ddlDataSource() {
 		// Make sure the Fields list is emptied because the current fields no longer belong to the item that is now selected 
 		m_lmFieldsModel.clear(); 
-
 		
 		boolean bEnableDateRangeControls = false;
 		String sStartDateCaption = "N/A", sFinishDateCaption = "N/A";
@@ -239,8 +249,8 @@ public class CPanel_Export extends JPanel {
 		if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){
 			// Flag that we want the Date Range controls enabled
 			bEnableDateRangeControls = true;
-			sStartDateCaption = "<in the works>";//fix_me...what is the proper date?
-			sFinishDateCaption = "<in the works>";//fix_me...what is the proper date? also, have a member variable for the actual dates?
+			sStartDateCaption = getCaptionFromDate(m_dtDateRangeStart);
+			sFinishDateCaption = getCaptionFromDate(m_dtDateRangeEnd);
 		} // End if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES))
 		
 		
@@ -252,13 +262,52 @@ public class CPanel_Export extends JPanel {
 		m_cmdDateRangeFinish.setEnabled(bEnableDateRangeControls);
 		m_cmdDateRangeFinish.setText(sFinishDateCaption);
 	}
+
+	
+	// Helper function to return the text needed for a button's caption based on a date's value
+	private String getCaptionFromDate(Date dtValue) {
+		// Create a date formatter object and display the date as the caption on the button
+		SimpleDateFormat fFormatter = new SimpleDateFormat("MMMM d, yyyy");
+		return fFormatter.format(dtValue);
+	}
 	
 	
 	// Called when the user clicks on the Start Date Range button 
-	private void OnClick_cmdDateRangeStart() { JOptionPane.showMessageDialog(null, "This functionality is not yet complete", "Info", JOptionPane.INFORMATION_MESSAGE); }
+	private void OnClick_cmdDateRangeStart() {
+		// Create a Calendar object so that we can grab the Year and Month index from the start date object
+		Calendar calDateRangeStart = Calendar.getInstance();
+		calDateRangeStart.setTime(m_dtDateRangeStart);
+		
+		// Create our Date Picker object (the dialog automatically displays modal)
+		CDatePicker dlgDate = new CDatePicker(this.getParent(), "Date Range - Start", calDateRangeStart.get(Calendar.MONTH), calDateRangeStart.get(Calendar.YEAR));
+		
+		// Grab the selected date. If a date was selected then...
+		Date dtSelection = dlgDate.getSelectedDate();
+		if(dtSelection != null) {
+			// Remember the selection and then cause the button's caption to indicate the selected date
+			m_dtDateRangeStart = dtSelection;
+			m_cmdDateRangeStart.setText(getCaptionFromDate(dtSelection));
+		} // End if(dtSelection != null)
+	}
+	
 	
 	// Called when the user clicks on the Finish Date Range button
-	private void OnClick_cmdDateRangeFinish() { JOptionPane.showMessageDialog(null, "This functionality is not yet complete", "Info", JOptionPane.INFORMATION_MESSAGE); }
+	private void OnClick_cmdDateRangeFinish() { 
+		// Create a Calendar object so that we can grab the Year and Month index from the start date object
+		Calendar calDateRangeStart = Calendar.getInstance();
+		calDateRangeStart.setTime(m_dtDateRangeEnd);
+		
+		// Create our Date Picker object (the dialog automatically displays modal)
+		CDatePicker dlgDate = new CDatePicker(this.getParent(), "Date Range - Finish", calDateRangeStart.get(Calendar.MONTH), calDateRangeStart.get(Calendar.YEAR));
+		
+		// Grab the selected date. If a date was selected then...
+		Date dtSelection = dlgDate.getSelectedDate();
+		if(dtSelection != null) {
+			// Remember the selection and then cause the button's caption to indicate the selected date
+			m_dtDateRangeEnd = dtSelection;
+			m_cmdDateRangeFinish.setText(getCaptionFromDate(dtSelection));
+		} // End if(dtSelection != null)
+	}
 	
 	
 	// Called when the selection changes for the Format drop-down. Make sure the Save As text box is cleared because the format no longer applies to the item that
@@ -324,8 +373,9 @@ public class CPanel_Export extends JPanel {
 			IExportFormatter fFormatter = (IExportFormatter)m_ddlFormat.getSelectedItem();
 			String sDataSource = (String)m_ddlDataSource.getSelectedItem();
 
-// fix_me...the following will need to receive date range parameters if we are dealing with a time entry export
-			String sURI = CResourceHelper.getURIForResource(sDataSource, true, m_UILogic.getEmployeeID());
+			// Get the URI needed for the Resource requested (employee id is currently only used for Time/Expense Imports to know if it should try to send the time/
+			// expense entries as approved entries or not; the date range start/end dates are only used by the export of time entries at this point)
+			String sURI = CResourceHelper.getURIForResource(sDataSource, true, m_UILogic.getEmployeeID(), m_dtDateRangeStart, m_dtDateRangeEnd);
 			String sMainElementName = CResourceHelper.getMainElementNameForResource(sDataSource);			
 			ArrayList<CFieldItem> alFields = getFieldItemsArrayList();
 			
