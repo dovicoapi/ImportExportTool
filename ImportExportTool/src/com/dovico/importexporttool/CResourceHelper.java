@@ -69,34 +69,35 @@ public class CResourceHelper {
 	/// <history>
     /// <modified author="C. Gerard Gallant" date="2011-12-15" reason="Added the lEmployeeID parameter and updated the TimeEntryies/ExpenseEntries URI logic according to if we're importing or exporting and if the logged in user is the admin token"/>
 	/// <modified author="C. Gerard Gallant" date="2012-01-02" reason="Added the dtDateRangeStart and dtDateRangeEnd parameters. Adjusted the export time entries URI to include the date range."/>
+	/// <modified author="C. Gerard Gallant" date="2012-03-09" reason="Adjusted the version numbers, specified in the CRESTAPIHelper.buildURI calls, to use the new Constants.API_VERSION_TARGETED constant rather than being hard coded to '1'."/>
 	/// </history>
 	public static String getURIForResource(String sResource, boolean bReturnExportURI, Long lEmployeeID, Date dtDateRangeStart, Date dtDateRangeEnd) {
 		String sURI = "";		
 		
 		// Build the proper URI based on the Data Source value
-		if(sResource.equals(Constants.API_RESOURCE_ITEM_CLIENTS)){ sURI = CRESTAPIHelper.buildURI("Clients/", "", "1"); }
-		else if(sResource.equals(Constants.API_RESOURCE_ITEM_PROJECTS)){ sURI = CRESTAPIHelper.buildURI("Projects/", "", "1"); }
-		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TASKS)){ sURI = CRESTAPIHelper.buildURI("Tasks/", "", "1"); }
-		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ sURI = CRESTAPIHelper.buildURI("Employees/", "", "1"); }
+		if(sResource.equals(Constants.API_RESOURCE_ITEM_CLIENTS)){ sURI = CRESTAPIHelper.buildURI("Clients/", "", Constants.API_VERSION_TARGETED); }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_PROJECTS)){ sURI = CRESTAPIHelper.buildURI("Projects/", "", Constants.API_VERSION_TARGETED); }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TASKS)){ sURI = CRESTAPIHelper.buildURI("Tasks/", "", Constants.API_VERSION_TARGETED); }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ sURI = CRESTAPIHelper.buildURI("Employees/", "", Constants.API_VERSION_TARGETED); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){
 			
 			// If the URI was requested for an Export (GET) then...
 			if(bReturnExportURI) {
 				// Build up the URI with the date range query string
-				sURI = CRESTAPIHelper.buildURI("TimeEntries/", buildDateRangeQueryString(dtDateRangeStart, dtDateRangeEnd), "1");
+				sURI = CRESTAPIHelper.buildURI("TimeEntries/", buildDateRangeQueryString(dtDateRangeStart, dtDateRangeEnd), Constants.API_VERSION_TARGETED);
 			} else { // The URI is for an Import (POST)...
 				// If we are logged in with the Admin user token then set the query string to 'approved=T' so that the time is entered into the system
 				// approved (users don't have to log in and submit it). Else, leave the query string empty (if we're doing an import, the time will not be approved and
 				// users will need to log in and submit it)
 				String sQueryString = (lEmployeeID == Constants.ADMIN_TOKEN_EMPLOYEE_ID ? "approved=T" : "");
-				sURI = CRESTAPIHelper.buildURI("TimeEntries/", sQueryString, "1");
+				sURI = CRESTAPIHelper.buildURI("TimeEntries/", sQueryString, Constants.API_VERSION_TARGETED);
 			} // End if(bReturnExportURI)
 			
 		} else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ 
 			
 			// If the URI was requested for an Export (GET) then...
 			if(bReturnExportURI) { 
-				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/", "", "1"); 
+				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/", "", Constants.API_VERSION_TARGETED); 
 			} else { // The URI is for an Import (POST)...
 				// If we are logged in with the Admin user token then set the query string to 'approved=T' so that the expenses are entered into the system approved 
 				// (users don't have to log in and submit them). Else, leave the query string empty (if we're doing an import, the expenses will not be approved and
@@ -105,7 +106,7 @@ public class CResourceHelper {
 				
 				// For Expense Entries, there are two POST URIs that can be used. The 'ExpenseEntries/' version requires that the Expense Sheet already exist.
 				// We want to use the 'ExpenseEntries/Sheet/' version because we want the Expense Sheet created for the Expense Entries we specify. 
-				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/Sheet/", sQueryString, "1");
+				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/Sheet/", sQueryString, Constants.API_VERSION_TARGETED);
 			} // End if(bReturnExportURI)
 			
 		} // End if
@@ -310,6 +311,9 @@ public class CResourceHelper {
 	
 		
 	// Returns the available fields for Time Entries
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-03-09" reason="Added the new fields that are available as of API v2 (Client ID/Name, Billable, OTCharge, and OTWage)"/>
+	/// </history>
 	private static void getAPIFieldsForTimeEntries(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Time Entry data
 		int iOrder = 0;
@@ -323,7 +327,9 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Sheet Status", "Status", CFieldItem.FieldItemType.String, false, "Sheet"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Rejected Reason", "RejectedReason", CFieldItem.FieldItemType.String, false, "Sheet"));
 			
-			// The Project, Task, and Employees are returned as a Node containing the item's name too when doing a GET
+			// The Client, Project, Task, and Employees are returned as a Node containing the item's name too when doing a GET
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Client ID", "ID", CFieldItem.FieldItemType.Number, false, "Client"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Client Name", "Name", CFieldItem.FieldItemType.String, false, "Client"));			
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ID", CFieldItem.FieldItemType.Number, false, "Project"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Name", "Name", CFieldItem.FieldItemType.String, false, "Project"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task ID", "ID", CFieldItem.FieldItemType.Number, false, "Task"));
@@ -342,6 +348,7 @@ public class CResourceHelper {
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Stop Time", "StopTime", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Total Hours", "TotalHours", CFieldItem.FieldItemType.Number));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, "Billable", "Billable", CFieldItem.FieldItemType.String));
 		
 		// If we're returning a GET list... 
 		if(bReturnExportFields) {
@@ -349,9 +356,11 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge", "Charge", CFieldItem.FieldItemType.Number));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "ChargeCurrency"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Charge Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "ChargeCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Overtime Charge Prorate", "OTCharge", CFieldItem.FieldItemType.Number));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage", "Wage", CFieldItem.FieldItemType.Number));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "WageCurrency"));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Wage Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "WageCurrency"));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Overtime Wage Prorate", "OTWage", CFieldItem.FieldItemType.Number));
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Prorate", "Prorate", CFieldItem.FieldItemType.Number));
 		} // End if(bReturnExportFields)
 		

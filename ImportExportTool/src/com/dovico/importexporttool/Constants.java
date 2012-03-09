@@ -25,4 +25,7 @@ public class Constants {
 	
 	// The REST API returns and expects dates in this format
 	public static String XML_DATE_FORMAT = "yyyy-MM-dd";
+	
+	// The API version that we are targeting
+	public static String API_VERSION_TARGETED = "2";
 }
