@@ -59,7 +59,7 @@ public class Dialog_ImportFieldMapping extends JDialog {
 		setModal(true);
 		setResizable(false);
 		setTitle("Add/Remove Mapping for Import");
-		setBounds(100, 100, 555, 458);
+		setBounds(100, 100, 555, 472);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -137,6 +137,11 @@ public class Dialog_ImportFieldMapping extends JDialog {
 			public void actionPerformed(ActionEvent arg0) { OnClick_cmdRemoveMap(); } 
 		});
 		contentPanel.add(cmdRemoveMap);
+		
+		JLabel lblAreRequired = new JLabel("* required fields for the import");
+		lblAreRequired.setFont(new Font("Arial", Font.PLAIN, 11));
+		lblAreRequired.setBounds(10, 386, 192, 14);
+		contentPanel.add(lblAreRequired);
 				
 		
 		// The OK and Cancel buttons

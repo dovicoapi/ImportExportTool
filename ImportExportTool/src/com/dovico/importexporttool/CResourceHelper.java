@@ -128,12 +128,15 @@ public class CResourceHelper {
 	
 
 	// Returns the available fields for Clients
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-03-20" reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
+	/// </history>
 	private static void getAPIFieldsForClients(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Client data
 		int iOrder = 0;
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); }// Only part of a GET
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Name", "Name", CFieldItem.FieldItemType.String));
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Abbreviation", "Abbreviation", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Name"), "Name", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Abbreviation"), "Abbreviation", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Contact", "Contact", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Email", "Email", CFieldItem.FieldItemType.String));
 		
@@ -149,6 +152,9 @@ public class CResourceHelper {
 
 	
 	// Returns the available fields for Projects
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-03-20" reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
+	/// </history>
 	private static void getAPIFieldsForProjects(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Project data
 		int iOrder = 0;
@@ -166,7 +172,7 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Client ID", "ClientID", CFieldItem.FieldItemType.Number)); 
 		} // End if(bReturnExportFields)
 		
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Name", "Name", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Name"), "Name", CFieldItem.FieldItemType.String));
 		
 		// If we're returning a GET list...
 		if(bReturnExportFields) {
@@ -219,11 +225,14 @@ public class CResourceHelper {
 	
 	
 	// Returns the available fields for Tasks
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-03-20" reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
+	/// </history>
 	private static void getAPIFieldsForTasks(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Task data
 		int iOrder = 0;
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); }// Only part of a GET
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Name", "Name", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Name"), "Name", CFieldItem.FieldItemType.String));
 		
 		// If we're returning a GET list...
 		if(bReturnExportFields) {
@@ -247,12 +256,15 @@ public class CResourceHelper {
 	
 	
 	// Returns the available fields for Employees
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-03-20" reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
+	/// </history>
 	private static void getAPIFieldsForEmployees(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Employee data
 		int iOrder = 0;
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); }// Only part of a GET
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Last Name", "LastName", CFieldItem.FieldItemType.String));
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "First Name", "FirstName", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Last Name"), "LastName", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "First Name"), "FirstName", CFieldItem.FieldItemType.String));
 
 		// If we're returning a GET list...
 		if(bReturnExportFields) {
@@ -313,6 +325,7 @@ public class CResourceHelper {
 	// Returns the available fields for Time Entries
 	/// <history>
 	/// <modified author="C. Gerard Gallant" date="2012-03-09" reason="Added the new fields that are available as of API v2 (Client ID/Name, Billable, OTCharge, and OTWage)"/>
+	/// <modified author="C. Gerard Gallant" date="2012-03-20" reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
 	/// </history>
 	private static void getAPIFieldsForTimeEntries(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Add the available fields for Time Entry data
@@ -338,15 +351,15 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee Name", "Name", CFieldItem.FieldItemType.String, false, "Employee"));
 		} 
 		else { // For POSTs, the ProjectID, TaskID, and EmployeeID are elements of the main node...
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ProjectID", CFieldItem.FieldItemType.Number));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Task ID", "TaskID", CFieldItem.FieldItemType.Number));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee ID", "EmployeeID", CFieldItem.FieldItemType.Number));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Project ID"), "ProjectID", CFieldItem.FieldItemType.Number));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Task ID"), "TaskID", CFieldItem.FieldItemType.Number));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Employee ID"), "EmployeeID", CFieldItem.FieldItemType.Number));
 		} // End if(bReturnExportFields)
 		
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Date", "Date", CFieldItem.FieldItemType.Date));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Date"), "Date", CFieldItem.FieldItemType.Date));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Start Time", "StartTime", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Stop Time", "StopTime", CFieldItem.FieldItemType.String));
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Total Hours", "TotalHours", CFieldItem.FieldItemType.Number));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Total Hours"), "TotalHours", CFieldItem.FieldItemType.Number));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Billable", "Billable", CFieldItem.FieldItemType.String));
 		
@@ -370,6 +383,9 @@ public class CResourceHelper {
 		
 		
 	// Returns the available fields for Expense Entries
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-03-20" reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
+	/// </history>
 	private static void getAPIFieldsForExpenseEntries(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Expense Entry data is in two parts: The Sheet and the Entries
 		int iOrder = 0;
@@ -391,12 +407,12 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Status", "Status", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 		}
 		else { // For POSTs, the EmployeeID, ManagerID, and ProjectID are elements of the main node...
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee ID", "EmployeeID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager ID", "ManagerID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ProjectID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Employee ID"), "EmployeeID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Manager ID"), "ManagerID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Project ID"), "ProjectID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 		} // End if(bReturnExportFields)
 		
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Title", "Title", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Title"), "Title", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS));
 		
 		// The Check Date, Check Number, and Approver fields are only part of GETs
@@ -422,7 +438,7 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Expense Category ID", "ExpenseCategoryID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		} // End if(bReturnExportFields)
 		
-		alReturnAPIFields.add(new CFieldItem(iOrder++, "Date", "Date", CFieldItem.FieldItemType.Date, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Date"), "Date", CFieldItem.FieldItemType.Date, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Purchase Order", "PurchaseOrder", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Reference Number", "ReferenceNumber", CFieldItem.FieldItemType.String, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
 		alReturnAPIFields.add(new CFieldItem(iOrder++, "Quantity", "Quantity", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES));
