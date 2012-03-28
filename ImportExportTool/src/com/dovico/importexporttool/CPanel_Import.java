@@ -425,6 +425,9 @@ public class CPanel_Import extends JPanel {
 	
 	
 	// Helper to build up the XML for a Main Element  
+	/// <history>
+    /// <modified author="C. Gerard Gallant" date="2012-03-28" reason="I should write a string builder class for XML (if one doesn't already exist) because I forgot to encode the fiDestination.getValue() value for special characters like '&' and '<'."/>
+	/// </history>
 	private String buildXMLForMainElement(String sMainElementName, boolean bImportingExpenses, ArrayList<CFieldItemMap> alCurrentMappings) {
 		CFieldItem fiDestination = null;
 		String sElementName = "";
@@ -449,9 +452,8 @@ public class CPanel_Import extends JPanel {
 				bExpenseEntryOpeningTagsAdded = true;
 			} // End if(bImportingExpenses && !bExpenseEntryOpeningTagsAdded && !fiDestination.getRootElementName().equals(sMainElementName))
 			
-			
 			// Build up the current element's XML containing the current destination item's value (e.g. <ID>100</ID>)
-			sReturnXML += ("<" + sElementName + ">" + fiDestination.getValue() + "</" + sElementName + ">");		
+			sReturnXML += ("<" + sElementName + ">" + fixXmlString(fiDestination.getValue()) + "</" + sElementName + ">");		
 		} // End of the for (CFieldItemMap fiFieldItemMap : m_alCurrentMappings) loop.
 		
 		
@@ -461,6 +463,19 @@ public class CPanel_Import extends JPanel {
 		// Close off our main element (e.g. </Client>) and return the XML to the caller
 		sReturnXML += ("</" + sMainElementName + ">");
 		return sReturnXML;
+	}
+	
+	
+	/// <history>
+    /// <modified author="C. Gerard Gallant" date="2012-03-28" reason="Created to help fix XML strings that are included as part of a larger XML string"/>
+	/// </history>
+	private String fixXmlString(String sValue) {
+		// Change all unsafe XML characters into their safe ones
+		String sReturnVal = sValue.replace("&", "&amp;");
+		sReturnVal = sReturnVal.replace("'", "&apos;");
+		sReturnVal = sReturnVal.replace("\"", "&quot;");
+		sReturnVal = sReturnVal.replace("<", "&lt;");
+		return sReturnVal.replace(">", "&gt;");
 	}
 
 }
