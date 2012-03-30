@@ -31,6 +31,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import com.dovico.commonlibrary.APIRequestResult;
+import com.dovico.commonlibrary.CDatePicker;
 import com.dovico.commonlibrary.CRESTAPIHelper;
 import com.dovico.commonlibrary.CXMLHelper;
 
@@ -38,9 +39,6 @@ import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.RowSpec;
-
-
-//NOTE: The Export code still needs work so the following code will change between here and the final release
 
 
 public class CPanel_Export extends JPanel {

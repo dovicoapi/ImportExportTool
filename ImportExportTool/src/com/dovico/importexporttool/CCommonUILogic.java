@@ -92,7 +92,7 @@ public class CCommonUILogic {
 		
 		// Tell the Settings pane what the settings are (we are not concerned about the logged in employee's First and Last name in this app but rather than have
 		// to write upgrade code, like the code to come below, if that every changes, we grab and store the values just in case)
-		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken, m_lEmployeeID, m_sEmployeeFirstName, m_sEmployeeLastName);
+		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, m_sEmployeeLastName);
 		
 		// If the Employee ID is 0 and the consumer secret and data access token have values then...(that means this application was run before the new functionality
 		// was added to the settings panel to grab the employee id/name and we now need to grab the employee id/name)
