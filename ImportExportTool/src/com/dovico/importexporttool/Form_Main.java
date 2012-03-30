@@ -55,7 +55,7 @@ public class Form_Main {
 			}
 		});
 		m_frmDovicoImportExport.setTitle("DOVICO - Import/Export Tool");
-		m_frmDovicoImportExport.setBounds(100, 100, 477, 380);
+		m_frmDovicoImportExport.setBounds(100, 100, 477, 400);
 		m_frmDovicoImportExport.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		
