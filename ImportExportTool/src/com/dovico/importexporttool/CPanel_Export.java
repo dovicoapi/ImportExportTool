@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 
 import javax.swing.DefaultListModel;
@@ -270,14 +269,14 @@ public class CPanel_Export extends JPanel {
 	}
 	
 	
-	// Called when the user clicks on the Start Date Range button 
+	// Called when the user clicks on the Start Date Range button
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-04-12" reason="I modified the CDatePicker class to work with a TableCellEditor and some of the changes required me to come back and tweak this code"/>
+	/// </history>
 	private void OnClick_cmdDateRangeStart() {
-		// Create a Calendar object so that we can grab the Year and Month index from the start date object
-		Calendar calDateRangeStart = Calendar.getInstance();
-		calDateRangeStart.setTime(m_dtDateRangeStart);
-		
-		// Create our Date Picker object (the dialog automatically displays modal)
-		CDatePicker dlgDate = new CDatePicker(this.getParent(), "Date Range - Start", calDateRangeStart.get(Calendar.MONTH), calDateRangeStart.get(Calendar.YEAR));
+		// Create our Date Picker object and show it
+		CDatePicker dlgDate = new CDatePicker(this.getParent(), null, "Date Range - Start", m_dtDateRangeStart);
+		dlgDate.setVisible(true);
 		
 		// Grab the selected date. If a date was selected then...
 		Date dtSelection = dlgDate.getSelectedDate();
@@ -290,13 +289,13 @@ public class CPanel_Export extends JPanel {
 	
 	
 	// Called when the user clicks on the Finish Date Range button
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-04-12" reason="I modified the CDatePicker class to work with a TableCellEditor and some of the changes required me to come back and tweak this code"/>
+	/// </history>
 	private void OnClick_cmdDateRangeFinish() { 
-		// Create a Calendar object so that we can grab the Year and Month index from the start date object
-		Calendar calDateRangeStart = Calendar.getInstance();
-		calDateRangeStart.setTime(m_dtDateRangeEnd);
-		
 		// Create our Date Picker object (the dialog automatically displays modal)
-		CDatePicker dlgDate = new CDatePicker(this.getParent(), "Date Range - Finish", calDateRangeStart.get(Calendar.MONTH), calDateRangeStart.get(Calendar.YEAR));
+		CDatePicker dlgDate = new CDatePicker(this.getParent(), null, "Date Range - Finish", m_dtDateRangeEnd);
+		dlgDate.setVisible(true);
 		
 		// Grab the selected date. If a date was selected then...
 		Date dtSelection = dlgDate.getSelectedDate();

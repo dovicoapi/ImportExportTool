@@ -30,6 +30,7 @@ import com.jgoodies.forms.layout.*;
 
 import com.dovico.commonlibrary.APIRequestResult;
 import com.dovico.commonlibrary.CRESTAPIHelper;
+import com.dovico.commonlibrary.CXMLHelper;
 
 
 
@@ -453,7 +454,7 @@ public class CPanel_Import extends JPanel {
 			} // End if(bImportingExpenses && !bExpenseEntryOpeningTagsAdded && !fiDestination.getRootElementName().equals(sMainElementName))
 			
 			// Build up the current element's XML containing the current destination item's value (e.g. <ID>100</ID>)
-			sReturnXML += ("<" + sElementName + ">" + fixXmlString(fiDestination.getValue()) + "</" + sElementName + ">");		
+			sReturnXML += ("<" + sElementName + ">" + CXMLHelper.fixXmlString(fiDestination.getValue()) + "</" + sElementName + ">");		
 		} // End of the for (CFieldItemMap fiFieldItemMap : m_alCurrentMappings) loop.
 		
 		
@@ -464,18 +465,4 @@ public class CPanel_Import extends JPanel {
 		sReturnXML += ("</" + sMainElementName + ">");
 		return sReturnXML;
 	}
-	
-	
-	/// <history>
-    /// <modified author="C. Gerard Gallant" date="2012-03-28" reason="Created to help fix XML strings that are included as part of a larger XML string"/>
-	/// </history>
-	private String fixXmlString(String sValue) {
-		// Change all unsafe XML characters into their safe ones
-		String sReturnVal = sValue.replace("&", "&amp;");
-		sReturnVal = sReturnVal.replace("'", "&apos;");
-		sReturnVal = sReturnVal.replace("\"", "&quot;");
-		sReturnVal = sReturnVal.replace("<", "&lt;");
-		return sReturnVal.replace(">", "&gt;");
-	}
-
 }
