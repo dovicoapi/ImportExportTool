@@ -87,11 +87,16 @@ public class CCommonUILogic {
 	// Called when the form is first displayed (windowOpened event)
 	/// <history>
     /// <modified author="C. Gerard Gallant" date="2011-12-14" reason="Now receives lEmployeeID, sEmployeeFirstName, and sEmployeeLastName parameters. Also added logic to grab the employee id if we already have token values (for those who have already run this app before the employee id functionality was added in)"/>
-    /// </history>
+	/// <modified author="C. Gerard Gallant" date="2012-04-20" reason="Added code to use the constant for the Consumer Secret if it exists. Code has also been added to tell the Settings pane not to show the Consumer Secret text box if the constant has a value."/>
+	/// </history>
 	public void handlePageLoad(String sConsumerSecret, String sDataAccessToken, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName) 
 	{ 
+		// We will hide the Consumer Secret field if the constant for the token is not an empty string. Pass the proper consumer secret value to our parent class
+		// if the constant was specified. If not, use the token that was last saved by the user.
+		boolean bHideConsumerSecretField = !Constants.CONSUMER_SECRET_API_TOKEN.isEmpty();
+		
 		// Remember the preferences specified
-		m_sConsumerSecret = sConsumerSecret;
+		m_sConsumerSecret = (bHideConsumerSecretField ? Constants.CONSUMER_SECRET_API_TOKEN : sConsumerSecret);
 		m_sDataAccessToken = sDataAccessToken;
 		m_lEmployeeID = lEmployeeID;
 		m_sEmployeeFirstName = sEmployeeFirstName;
@@ -103,8 +108,9 @@ public class CCommonUILogic {
 		
 		
 		// Tell the Settings pane what the settings are (we are not concerned about the logged in employee's First and Last name in this app but rather than have
-		// to write upgrade code, like the code to come below, if that every changes, we grab and store the values just in case)
-		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, m_sEmployeeLastName);
+		// to write upgrade code, like the code to come below, if that ever changes, we grab and store the values just in case)
+		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, 
+				m_sEmployeeLastName, bHideConsumerSecretField);
 		
 		// If the Employee ID is 0 and the consumer secret and data access token have values then...(that means this application was run before the new functionality
 		// was added to the settings panel to grab the employee id/name and we now need to grab the employee id/name)
