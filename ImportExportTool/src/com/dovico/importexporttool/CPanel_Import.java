@@ -428,6 +428,7 @@ public class CPanel_Import extends JPanel {
 	// Helper to build up the XML for a Main Element  
 	/// <history>
     /// <modified author="C. Gerard Gallant" date="2012-03-28" reason="I should write a string builder class for XML (if one doesn't already exist) because I forgot to encode the fiDestination.getValue() value for special characters like '&' and '<'."/>
+    /// <modified author="C. Gerard Gallant" date="2012-05-31" reason="Changed the CXMLHelper function call from fixXmlString to encodeTextForElement because the encoding of the single & double quote characters was causing a parse error in the REST API and a Bad Request error to be returned. The import would fail if any of the entries had a single or double quote character."/>
 	/// </history>
 	private String buildXMLForMainElement(String sMainElementName, boolean bImportingExpenses, ArrayList<CFieldItemMap> alCurrentMappings) {
 		CFieldItem fiDestination = null;
@@ -454,7 +455,7 @@ public class CPanel_Import extends JPanel {
 			} // End if(bImportingExpenses && !bExpenseEntryOpeningTagsAdded && !fiDestination.getRootElementName().equals(sMainElementName))
 			
 			// Build up the current element's XML containing the current destination item's value (e.g. <ID>100</ID>)
-			sReturnXML += ("<" + sElementName + ">" + CXMLHelper.fixXmlString(fiDestination.getValue()) + "</" + sElementName + ">");		
+			sReturnXML += ("<" + sElementName + ">" + CXMLHelper.encodeTextForElement(fiDestination.getValue()) + "</" + sElementName + ">");		
 		} // End of the for (CFieldItemMap fiFieldItemMap : m_alCurrentMappings) loop.
 		
 		
