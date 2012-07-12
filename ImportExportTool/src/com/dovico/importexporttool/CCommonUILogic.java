@@ -6,6 +6,7 @@ import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.*;
 
+import com.dovico.commonlibrary.CPanel_About;
 import com.dovico.commonlibrary.CPanel_Settings;
 
 
@@ -16,6 +17,7 @@ public class CCommonUILogic {
 	private JTabbedPane m_pTabControl = null;
 	
 	private CPanel_Settings m_pSettingsTab = null;
+	private CPanel_About m_pAboutTab = null;
 	private int m_iPreviousTabIndex = -1;
 	private int m_iSettingsTabIndex = 2;
 	
@@ -81,6 +83,10 @@ public class CCommonUILogic {
 		// Create our Settings Tab panel and add it to our tab control
 		m_pSettingsTab = new CPanel_Settings(); 
 		m_pTabControl.addTab("Settings", null, m_pSettingsTab, null);
+		
+		// Create our About Tab panel and add it to our tab control
+		m_pAboutTab = new CPanel_About("Import/Export Tool", "1.1"); 
+		m_pTabControl.addTab("About", null, m_pAboutTab, null);
 	}
 	
 	
