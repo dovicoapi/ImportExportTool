@@ -11,6 +11,21 @@ import javax.swing.JComboBox;
 import javax.swing.JTable;
 import javax.swing.border.BevelBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import java.awt.Font;
 import java.awt.event.ActionEvent;
@@ -19,11 +34,15 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.*;
@@ -158,6 +177,10 @@ public class CPanel_Import extends JPanel {
 			public void actionPerformed(ActionEvent arg0) { OnClick_cmdImport(); } 
 		});
 		this.add(cmdImport, "6, 10, 3, 1");
+		
+		
+		// Load in the state information (field values and selections from the last time this view was used) and re-populate the fields
+		loadState();
 	}
 	
 	
@@ -175,7 +198,8 @@ public class CPanel_Import extends JPanel {
 			Constants.API_RESOURCE_ITEM_PROJECTS, 
 			Constants.API_RESOURCE_ITEM_TASKS,
 			Constants.API_RESOURCE_ITEM_EMPLOYEES, 
-			Constants.API_RESOURCE_ITEM_TIME_ENTRIES, 
+			Constants.API_RESOURCE_ITEM_TIME_ENTRIES,
+			Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES, 
 			Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES 
 		};
 		return arrItems;
@@ -309,6 +333,9 @@ public class CPanel_Import extends JPanel {
 		// If the validation fails then...
 		if(!validateForImport()) { return; }
 		
+		// Save the current field values and selections
+		saveState();
+		
 		String sResource = (String)m_ddlDestination.getSelectedItem();		
 		String sRootElementName = CResourceHelper.getRootElementNameForResource(sResource);
 		String sMainElementName = CResourceHelper.getMainElementNameForResource(sResource);
@@ -346,7 +373,7 @@ public class CPanel_Import extends JPanel {
 			FileReader frReader = new FileReader(m_txtImportFrom.getText());
 			brReader = new BufferedReader(frReader);
 			boolean bFirstLine = true;
-
+			boolean bHaveError = false;
 			
 			// Start off the root XML (e.g. <Clients>) for the request that will be passed to the REST API
 			String sXML = ("<" + sRootElementName + ">");
@@ -360,22 +387,28 @@ public class CPanel_Import extends JPanel {
 				// Read in the current record. If we hit the end of the file then...(no record was read in so exit the loop now)
 				iResult = fFormatter.ReadRecord(brReader, bFirstLine, m_alColumnsInTheFile, m_alCurrentMappings);
 				if(iResult == IImportFormatter.Result.EndOfFile) { break; }
+				else if(iResult == IImportFormatter.Result.Error){ bHaveError = true; break; }
 				
 				// Change the flag to no longer indicate that we're at the first line in the file
 				bFirstLine = false;
 				
 				// Build up the XML for the current Main Element (e.g. <Client>...</Client>)
-				sXML += buildXMLForMainElement(sMainElementName, bImportingExpenses, m_alCurrentMappings);
-		
+				sXML += buildXMLForMainElement(sMainElementName, bImportingExpenses, m_alCurrentMappings);		
 			} while(iResult == IImportFormatter.Result.AllOK);
 			
 			
-			// Close off the root XML (e.g. </Clients>) and send the XML to the REST API to have the data inserted (POST). If an error was displayed to the user
-			// then flag that there was an error so that the user doesn't get the 'Done' prompt (so that the user doesn't have to deal with two prompts)
-			sXML += ("</" + sRootElementName + ">");
-			String sURI = CResourceHelper.getURIForResource(sResource, false, lEmployeeID, null, null);//the dates are not used by an import
-			APIRequestResult arResult = CRESTAPIHelper.makeAPIRequest(sURI, "POST", sXML, m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken());
-			if(arResult.getDisplayedError()) { iResult = IImportFormatter.Result.Error; }
+			// Only proceed if all is ok...
+			if(!bHaveError){			
+				// Close off the root XML (e.g. </Clients>) and send the XML to the REST API to have the data inserted (POST). If an error was displayed to the user
+				// then flag that there was an error so that the user doesn't get the 'Done' prompt (so that the user doesn't have to deal with two prompts)
+				sXML += ("</" + sRootElementName + ">");
+				String sURI = CResourceHelper.getURIForResource(sResource, false, lEmployeeID, null, null);//the dates are not used by an import
+				APIRequestResult arResult = CRESTAPIHelper.makeAPIRequest(sURI, "POST", sXML, m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken());
+				if(arResult.getDisplayedError()) { iResult = IImportFormatter.Result.Error; }
+
+				// Log the response from the call
+				logResponse(arResult);
+			} // End if(!bHaveError)
 		} 
 		catch (FileNotFoundException e) { 
 			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 
@@ -420,8 +453,10 @@ public class CPanel_Import extends JPanel {
 	
 	// Make sure the values in the Destination fields are cleared so that a previous loop's data does not impact the current loop. 
 	private void clearMappingValues() {
-		// Loop through the mappings list clearing each Destination item's value
-		for (CFieldItemMap fiFieldItemMap : m_alCurrentMappings) { fiFieldItemMap.getDestinationItem().setValue(""); }
+		try{
+			// Loop through the mappings list clearing each Destination item's value
+			for (CFieldItemMap fiFieldItemMap : m_alCurrentMappings) { fiFieldItemMap.getDestinationItem().setValue("", true); }
+		} catch (Exception e) {}
 	}
 	
 	
@@ -465,5 +500,153 @@ public class CPanel_Import extends JPanel {
 		// Close off our main element (e.g. </Client>) and return the XML to the caller
 		sReturnXML += ("</" + sMainElementName + ">");
 		return sReturnXML;
+	}
+	
+	
+	// Logs the response from the API call 
+	private void logResponse(APIRequestResult aRequestResult){
+		String sData = "";
+		boolean bHadError = false;
+		
+		StringWriter swWriter = null;
+		FileWriter fwWriter = null;
+		
+		try {
+			// If there was an error, grab the error message
+			if(aRequestResult.getHadRequestError()){
+				sData = aRequestResult.getRequestErrorMessage();
+				bHadError = true;
+			} else{ // There was no error from the API call...
+				// Get the XML from the Xml Document
+				swWriter = new StringWriter();
+				StreamResult srResult = new StreamResult(swWriter);
+				DOMSource domSource = new DOMSource(aRequestResult.getResultDocument().getDocumentElement());
+
+				Transformer tTrans = TransformerFactory.newInstance().newTransformer();
+				tTrans.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+				tTrans.setOutputProperty(OutputKeys.INDENT, "yes");
+				tTrans.transform(domSource, srResult);
+
+				sData = swWriter.toString();
+				swWriter.close();
+				swWriter = null;
+			} // End f(aRequestResult.getHadRequestError())
+		
+		
+			// Write out the file
+			fwWriter = new FileWriter(getFileNameForResultOutput(bHadError), false);			
+			fwWriter.write(sData);		
+		} 
+		catch (TransformerConfigurationException e) {}
+		catch (TransformerFactoryConfigurationError e) {}
+		catch (IOException e) {} 
+		catch (TransformerException e) {}
+		finally {
+			try {
+				if(swWriter != null) { swWriter.close(); }		
+				if(fwWriter!=null){ fwWriter.flush(); fwWriter.close(); } 
+			} catch (IOException e) {}
+		}
+	}
+	
+	
+	// Returns a file name for the output (e.g. 2012_1_23__2_34_23_Success.xml)
+	private String getFileNameForResultOutput(boolean bHadError){
+		
+		Calendar dtToday = Calendar.getInstance();		
+		return (Integer.toString(dtToday.get(Calendar.YEAR)) + "_" + 
+				Integer.toString(dtToday.get(Calendar.MONTH)) + "_" + 
+				Integer.toString(dtToday.get(Calendar.DAY_OF_MONTH)) + "__" + 
+				Integer.toString(dtToday.get(Calendar.HOUR)) + "_" + 
+				Integer.toString(dtToday.get(Calendar.MINUTE)) + "_" + 
+				Integer.toString(dtToday.get(Calendar.SECOND)) + "__" +
+				(bHadError ? "Error.txt" : "Success.xml"));
+	}
+	
+	
+	private void loadState(){		
+		BufferedReader brReader = null;
+		
+		try {			
+			// Read in the XML file's state information
+			DocumentBuilderFactory dbfFactory = DocumentBuilderFactory.newInstance();
+			Document xdDoc = dbfFactory.newDocumentBuilder().parse(Constants.IMPORT_STATE_FILE_NAME);
+			
+			Element xeDocElement = xdDoc.getDocumentElement();
+			
+			// Set the File Path and Destination values
+			m_txtImportFrom.setText(CXMLHelper.getChildNodeValue(xeDocElement, "FilePath"));			
+			m_ddlDestination.setSelectedItem(CXMLHelper.getChildNodeValue(xeDocElement, "Destination"));
+						
+			// Load in the 'Columns in the File' values from our XML...
+			m_alColumnsInTheFile = new ArrayList<CFieldItem>();
+			
+			Element xeRoot = (Element)xeDocElement.getElementsByTagName("ColumnsInFile").item(0);
+			NodeList xnlElements = xeRoot.getElementsByTagName("FieldItem");
+			int iIndex = 0, iCount = xnlElements.getLength();
+			for(iIndex = 0; iIndex < iCount; iIndex++) { m_alColumnsInTheFile.add(new CFieldItem((Element)xnlElements.item(iIndex))); }
+			
+			
+			// Make sure the current mappings array is cleared and then load it from the file
+			clearRowsFromMappingTable();
+			m_alCurrentMappings = new ArrayList<CFieldItemMap>();
+			
+			CFieldItemMap fiFieldItemMap = null;
+			xeRoot = (Element)xeDocElement.getElementsByTagName("CurrentMappings").item(0);
+			xnlElements = xeRoot.getElementsByTagName("FieldItemMap");
+			iCount = xnlElements.getLength();
+			for(iIndex = 0; iIndex < iCount; iIndex++) {
+				// Create a new Field Item Map object from the current XmlElement and add it to our array list and grid model
+				fiFieldItemMap = new CFieldItemMap((Element)xnlElements.item(iIndex));
+				m_alCurrentMappings.add(fiFieldItemMap);				
+				m_tmMappingModel.addRow(new Object[] { fiFieldItemMap.getSourceItem(), fiFieldItemMap.getDestinationItem() });
+			} // End of the for(iIndex = 0; iIndex < iCount; iIndex++) loop.
+			
+			
+			
+		} 
+		catch (SAXException e) {} /* Don't throw errors. The state information is a convenience so the user doesn't have to re-enter/select the information. If the state information file fails to load don't throw errors. */
+		catch (IOException e) {} /* Don't throw errors */
+		catch (ParserConfigurationException e) {}/* Don't throw errors */ 
+		finally { // Happens whether or not there was an exception...
+			// If we have a reader object then make sure it's closed
+			try { if(brReader != null) { brReader.close(); } } 
+			catch (IOException e) { } /*Don't throw errors*/
+		} // End of the finally block
+		
+	}
+	
+	
+	private void saveState() {
+		BufferedWriter bwWriter = null;
+		
+		try {
+			// Open up the state information file (overwrite the existing file if it exists)
+			FileWriter fwWriter = new FileWriter(Constants.IMPORT_STATE_FILE_NAME, false);
+			bwWriter = new BufferedWriter(fwWriter);
+
+			// Write the file path and destination to the file
+			bwWriter.write(("<?xml version=\"1.0\" encoding=\"UTF-8\" ?><State><FilePath>"+ m_txtImportFrom.getText() + "</FilePath><Destination>"+ (String)m_ddlDestination.getSelectedItem() + "</Destination><ColumnsInFile>"));
+					
+			// Loop through the file's columns adding them to the XML
+			String sXML = "";
+			for (CFieldItem fiFieldItem : m_alColumnsInTheFile) { sXML += fiFieldItem.toXML(); }
+			
+			// Write out the File Columns XML to the file
+			bwWriter.write((sXML + "</ColumnsInFile><CurrentMappings>"));
+
+			// Loop through the mappings adding them to the XML
+			sXML = "";
+			for (CFieldItemMap fiFieldItemMap : m_alCurrentMappings) { sXML += fiFieldItemMap.toXML(); }
+					
+			// Write out the Mappings XML to the file
+			bwWriter.write((sXML + "</CurrentMappings></State>"));
+		} 
+		catch (IOException e) { } /* Don't throw errors. The state information is a convenience so the user doesn't have to re-enter/select the information. If the state information file fails to load don't throw errors. */
+		finally { // Happens whether or not there was an exception...
+			// Close the BufferedWriter
+			try { if(bwWriter != null) { bwWriter.flush(); bwWriter.close(); } } 
+			catch (IOException e) { } /*Don't throw errors*/
+		} // End of finally block		
 	}
 }

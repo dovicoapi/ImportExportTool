@@ -18,6 +18,7 @@ public class CResourceHelper {
 	public static String ROOT_ELEMENT_NAME_FOR_TASKS = "Tasks";
 	public static String ROOT_ELEMENT_NAME_FOR_EMPLOYEES = "Employees";
 	public static String ROOT_ELEMENT_NAME_FOR_TIME_ENTRIES = "TimeEntries";
+	public static String ROOT_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES = "ExpenseCategories";
 	public static String ROOT_ELEMENT_NAME_FOR_EXPENSE_SHEETS = "ExpenseSheets";
 	public static String ROOT_ELEMENT_NAME_FOR_EXPENSE_SHEET_ENTRIES = "ExpenseEntries";
 		
@@ -27,11 +28,15 @@ public class CResourceHelper {
 	public static String MAIN_ELEMENT_NAME_FOR_TASKS = "Task";
 	public static String MAIN_ELEMENT_NAME_FOR_EMPLOYEES = "Employee";
 	public static String MAIN_ELEMENT_NAME_FOR_TIME_ENTRIES = "TimeEntry";
+	public static String MAIN_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES = "ExpenseCategory";
 	public static String MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS = "ExpenseSheet";
 	public static String MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES = "ExpenseEntry";	
 	
 	
 	// Returns the Root Element Name based on the resource item
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-08-22" reason="Added logic for expense categories"/>
+	/// </history>
 	public static String getRootElementNameForResource(String sResource) {
 		String sRootElementName = "";
 		
@@ -42,6 +47,7 @@ public class CResourceHelper {
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TASKS)){ sRootElementName = ROOT_ELEMENT_NAME_FOR_TASKS; }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ sRootElementName = ROOT_ELEMENT_NAME_FOR_EMPLOYEES; }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){ sRootElementName = ROOT_ELEMENT_NAME_FOR_TIME_ENTRIES; }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES)){ sRootElementName = ROOT_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES; }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ sRootElementName = ROOT_ELEMENT_NAME_FOR_EXPENSE_SHEETS; }
 	
 		return sRootElementName;
@@ -49,6 +55,9 @@ public class CResourceHelper {
 	
 	
 	// Returns the Main Element Name based on the resource item 
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-08-22" reason="Added logic for expense categories"/>
+	/// </history>
 	public static String getMainElementNameForResource(String sResource) {
 		String sMainElementName = "";
 		
@@ -59,6 +68,7 @@ public class CResourceHelper {
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TASKS)){ sMainElementName = MAIN_ELEMENT_NAME_FOR_TASKS; }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ sMainElementName = MAIN_ELEMENT_NAME_FOR_EMPLOYEES; }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){ sMainElementName = MAIN_ELEMENT_NAME_FOR_TIME_ENTRIES; }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES)){ sMainElementName = MAIN_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES; }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ sMainElementName = MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS; }
 	
 		return sMainElementName;
@@ -70,6 +80,7 @@ public class CResourceHelper {
     /// <modified author="C. Gerard Gallant" date="2011-12-15" reason="Added the lEmployeeID parameter and updated the TimeEntryies/ExpenseEntries URI logic according to if we're importing or exporting and if the logged in user is the admin token"/>
 	/// <modified author="C. Gerard Gallant" date="2012-01-02" reason="Added the dtDateRangeStart and dtDateRangeEnd parameters. Adjusted the export time entries URI to include the date range."/>
 	/// <modified author="C. Gerard Gallant" date="2012-03-09" reason="Adjusted the version numbers, specified in the CRESTAPIHelper.buildURI calls, to use the new Constants.API_VERSION_TARGETED constant rather than being hard coded to '1'."/>
+	/// <modified author="C. Gerard Gallant" date="2012-08-22" reason="Added logic for expense categories"/>
 	/// </history>
 	public static String getURIForResource(String sResource, boolean bReturnExportURI, Long lEmployeeID, Date dtDateRangeStart, Date dtDateRangeEnd) {
 		String sURI = "";		
@@ -92,8 +103,9 @@ public class CResourceHelper {
 				String sQueryString = (lEmployeeID == Constants.ADMIN_TOKEN_EMPLOYEE_ID ? "approved=T" : "");
 				sURI = CRESTAPIHelper.buildURI("TimeEntries/", sQueryString, Constants.API_VERSION_TARGETED);
 			} // End if(bReturnExportURI)
-			
-		} else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ 
+		} 
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES)){ sURI = CRESTAPIHelper.buildURI("ExpenseCategories/", "", Constants.API_VERSION_TARGETED); }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ 
 			
 			// If the URI was requested for an Export (GET) then...
 			if(bReturnExportURI) { 
@@ -117,12 +129,16 @@ public class CResourceHelper {
 		
 
 	// Returns a list of fields based on the resource specified and if the fields are for a GET (export) or a POST (import)
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-08-22" reason="Added logic for expense categories"/>
+	/// </history>
 	public static void getAPIFieldsForResource(String sResource, boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields){
 		if(sResource.equals(Constants.API_RESOURCE_ITEM_CLIENTS)){ getAPIFieldsForClients(bReturnExportFields, alReturnAPIFields); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_PROJECTS)){ getAPIFieldsForProjects(bReturnExportFields, alReturnAPIFields); } 
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TASKS)){ getAPIFieldsForTasks(bReturnExportFields, alReturnAPIFields); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EMPLOYEES)){ getAPIFieldsForEmployees(bReturnExportFields, alReturnAPIFields); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){ getAPIFieldsForTimeEntries(bReturnExportFields, alReturnAPIFields); }
+		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES)){ getAPIFieldsForExpenseCategories(bReturnExportFields, alReturnAPIFields); }
 		else if(sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){ getAPIFieldsForExpenseEntries(bReturnExportFields, alReturnAPIFields); }
 	}
 	
@@ -381,6 +397,35 @@ public class CResourceHelper {
 		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String)); }		
 	}
 		
+	
+	// Returns the available fields for Expense Categories
+	/// <history>
+	/// <modified author="C. Gerard Gallant" date="2012-08-22" reason="Created"/>
+	/// </history>
+	private static void getAPIFieldsForExpenseCategories(boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
+		// Add the available fields for Expense Category data
+		int iOrder = 0;
+		if(bReturnExportFields) { alReturnAPIFields.add(new CFieldItem(iOrder++, "ID", "ID", CFieldItem.FieldItemType.Number)); }// Only part of a GET
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* ") + "Name"), "Name", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, "Unit", "Unit", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, "CostPerUnit", "CostPerUnit", CFieldItem.FieldItemType.Number));
+		
+		// If we're returning a GET list...  
+		if(bReturnExportFields) {
+			// For GETs, Currency ID is a sub-node (<Currency><ID></ID>...</Currency>).
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "ID", CFieldItem.FieldItemType.Number, false, "Currency", MAIN_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES));
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency Symbol", "Symbol", CFieldItem.FieldItemType.String, false, "Currency", MAIN_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES));
+		} 
+		else { // For POSTs, CurrencyID is an element of the main node...
+			alReturnAPIFields.add(new CFieldItem(iOrder++, "Currency ID", "CurrencyID", CFieldItem.FieldItemType.Number, true, "", MAIN_ELEMENT_NAME_FOR_EXPENSE_CATEGORIES)); 
+		} // End if(bReturnExportFields)
+
+		alReturnAPIFields.add(new CFieldItem(iOrder++, ((bReturnExportFields ? "" : "* (if Unit is T) ") + "UnitDescription"), "UnitDescription", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, "Description", "Description", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, "Archive", "Archive", CFieldItem.FieldItemType.String));
+		alReturnAPIFields.add(new CFieldItem(iOrder++, "Integrate", "Integrate", CFieldItem.FieldItemType.String));	
+	}
+	
 		
 	// Returns the available fields for Expense Entries
 	/// <history>

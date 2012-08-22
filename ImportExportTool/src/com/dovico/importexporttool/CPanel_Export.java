@@ -219,7 +219,8 @@ public class CPanel_Export extends JPanel {
 			Constants.API_RESOURCE_ITEM_PROJECTS, 
 			Constants.API_RESOURCE_ITEM_TASKS,
 			Constants.API_RESOURCE_ITEM_EMPLOYEES, 
-			Constants.API_RESOURCE_ITEM_TIME_ENTRIES, 
+			Constants.API_RESOURCE_ITEM_TIME_ENTRIES,
+			Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES,
 			Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES 
 		};
 		return arrItems;
@@ -534,8 +535,10 @@ public class CPanel_Export extends JPanel {
 	
 	// Clears the values in each field so that a previous export doesn't contaminate the current export 
 	private void clearFieldValues(ArrayList<CFieldItem> alFields) {
-		// Loop through the fields clearing the values 
-		for (CFieldItem fiFieldItem : alFields) { fiFieldItem.setValue(""); }
+		try {
+			// Loop through the fields clearing the values 
+			for (CFieldItem fiFieldItem : alFields) { fiFieldItem.setValue("", true); }
+		} catch (Exception e) {}
 	}
 		
 	
@@ -613,7 +616,9 @@ public class CPanel_Export extends JPanel {
 			if(xnlFieldParentElements.getLength() > 0) { xeFieldParentElement = (Element)xnlFieldParentElements.item(0); }
 		} // End if(!fiFieldItem.isAtRootElementLevel())
 		
-		// Grab the field item's value
-		fiFieldItem.setValue(CXMLHelper.getChildNodeValue(xeFieldParentElement, fiFieldItem.getElementName()));	
+		try{
+			// Grab the field item's value
+			fiFieldItem.setValue(CXMLHelper.getChildNodeValue(xeFieldParentElement, fiFieldItem.getElementName()), false);
+		} catch (Exception e) {}
 	}
 }

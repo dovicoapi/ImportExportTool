@@ -1,5 +1,14 @@
 package com.dovico.importexporttool;
 
+import com.dovico.commonlibrary.CXMLHelper;
+import org.w3c.dom.Element;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+
 
 public class CFieldItem {
 	public enum FieldItemType { String, Number, Date };
@@ -52,6 +61,9 @@ public class CFieldItem {
 		m_sRootElementName = sRootElementName;
 	}
 	
+	// Overloaded constructor for when we're pulling the saved state data back in when re-opening the view
+	public CFieldItem(Element xeElement){ setFieldsFromElementValues(xeElement); }
+	
 	
 	// Returns the order for this field
 	public int getOrder() { return m_iOrder; }
@@ -79,8 +91,49 @@ public class CFieldItem {
 	
 	
 	// Sets/Gets the value for this field (when it's been parsed from the file or REST API results)
-	public void setValue(String sValue) { m_sFieldValue = sValue; }
+	public void setValue(String sValue, boolean bClearingValue) throws Exception { 
+		// Only check if we're not being called to clear the value AND if we're a date column then...(make sure the value passed in is formatted correctly)
+		if(!bClearingValue && m_iFieldType.equals(FieldItemType.Date)) { validateDate(sValue); }
+		
+		m_sFieldValue = sValue;	
+	}
 	public String getValue() { return m_sFieldValue; }
+	
+	private void validateDate(String sValue) throws Exception{
+		String sErrorMsg = "";
+		
+		// Dates are expected in the format: yyyy-MM-dd
+		SimpleDateFormat sdfDate = new SimpleDateFormat(Constants.XML_DATE_FORMAT);
+		try {
+			// Parse the date string to ensure it's in the proper format
+			Date dtDate = sdfDate.parse(sValue);
+			if(!validateDateRange(dtDate)){ sErrorMsg = ("The date '"+ sValue +"' does not fall within the required date range of 1900-01-01 to 2199-12-31"); }
+		} catch (ParseException e) { sErrorMsg = ("The date '"+ sValue +"' must be in the format yyyy-MM-dd."); }
+
+		
+		if(!sErrorMsg.isEmpty()){ throw new Exception(sErrorMsg); }
+	
+	}
+
+	private boolean validateDateRange(Date dtValue){
+		Calendar cal = Calendar.getInstance();
+		cal.set(Calendar.YEAR, 1900);
+		cal.set(Calendar.MONTH, 0);//zero-based!
+		cal.set(Calendar.DATE, 1);
+		cal.set(Calendar.HOUR, 0); // Zero out the Hour
+		cal.set(Calendar.MINUTE, 0); // Zero out the Minute
+		cal.set(Calendar.SECOND, 0); // Zero out the Second
+		cal.set(Calendar.MILLISECOND, 0); // Zero out the Millisecond		
+		Date dtMinSysDate = cal.getTime();
+		
+		cal.set(Calendar.YEAR, 2199);
+		cal.set(Calendar.MONTH, 11);//zero-based!
+		cal.set(Calendar.DATE, 31);		
+		Date dtMaxSysDate = cal.getTime();
+		
+		// Tell the calling function if the date falls outside of the system date range or not
+		return !(dtValue.before(dtMinSysDate) || dtValue.after(dtMaxSysDate));
+	}
 	
 	
 	// This class will be used in a List so the following will allow it to show the proper text in the list
@@ -106,5 +159,38 @@ public class CFieldItem {
 		{ 
 			return false; 
 		} // End if
+	}
+	
+	public String toXML(){
+		return "<FieldItem><Order>"+ Integer.toString(m_iOrder) + 
+				"</Order><Caption>" + CXMLHelper.encodeTextForElement(m_sCaption) +
+				"</Caption><ElementName>"+ CXMLHelper.encodeTextForElement(m_sElementName) +
+				"</ElementName><FieldType>" + getFieldTypeAsString() +
+				"</FieldType><IsRoot>"+ (m_bIsAtRootElementLevel ? "T" : "F") + 
+				"</IsRoot><ParentElementName>"+ CXMLHelper.encodeTextForElement(m_sParentElementName) +
+				"</ParentElementName><RootElementName>" + CXMLHelper.encodeTextForElement(m_sRootElementName)+
+				"</RootElementName></FieldItem>";
+	}
+	
+	private String getFieldTypeAsString(){
+		if(m_iFieldType == FieldItemType.Number) { return "N"; }// Number
+		else if(m_iFieldType == FieldItemType.Date){  return "D"; }// Date
+		else { return "S"; } // String
+	}
+	private FieldItemType getFieldTypeFromString(String sValue){		
+		if(sValue.equals("N")) { return FieldItemType.Number; }//Number
+		else if(sValue.equals("D")){ return FieldItemType.Date; }// date
+		else{ return FieldItemType.String; } // String
+	}
+
+	private void setFieldsFromElementValues(Element xeElement){
+		// Get the field values from the element
+		m_iOrder = Integer.parseInt(CXMLHelper.getChildNodeValue(xeElement, "Order", "0"), 10);
+		m_sCaption = CXMLHelper.getChildNodeValue(xeElement, "Caption", "");
+		m_sElementName = CXMLHelper.getChildNodeValue(xeElement, "ElementName", "");
+		m_iFieldType = getFieldTypeFromString(CXMLHelper.getChildNodeValue(xeElement, "FieldType", "S"));
+		m_bIsAtRootElementLevel = CXMLHelper.getChildNodeValue(xeElement, "IsRoot", "T").equals("T");
+		m_sParentElementName= CXMLHelper.getChildNodeValue(xeElement, "ParentElementName", "");
+		m_sRootElementName = CXMLHelper.getChildNodeValue(xeElement, "RootElementName", "");
 	}
 }

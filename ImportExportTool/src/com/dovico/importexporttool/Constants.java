@@ -24,6 +24,7 @@ public class Constants {
 	public static String API_RESOURCE_ITEM_TASKS = "Tasks";
 	public static String API_RESOURCE_ITEM_EMPLOYEES = "Employees";
 	public static String API_RESOURCE_ITEM_TIME_ENTRIES = "Time Entries";
+	public static String API_RESOURCE_ITEM_EXPENSE_CATEGORIES = "Expense Categories";
 	public static String API_RESOURCE_ITEM_EXPENSE_ENTRIES = "Expense Entries";
 	
 	
@@ -34,4 +35,7 @@ public class Constants {
 	
 	// The API version that we are targeting
 	public static String API_VERSION_TARGETED = "2";
+	
+	public static String IMPORT_STATE_FILE_NAME = "importstate.xml";
+	public static String EXPORT_STATE_FILE_NAME = "exportstate.xml";
 }

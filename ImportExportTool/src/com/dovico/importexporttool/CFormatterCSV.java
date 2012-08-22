@@ -203,8 +203,7 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 					iColIndex++; 
 				} // End of the while(iLineLength > 0) loop.
 			} // End if(sLine == null)		
-		}
-		catch (IOException e) {
+		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 			iResult = Result.Error;
 		}
@@ -215,7 +214,7 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 	
 	
 	// Puts the column value into the Destination item's value for each mapping that contains our source column  
-	private void setMappingValue(CFieldItem fiColumnInTheFile, ArrayList<CFieldItemMap> alCurrentMappings, String sColumnValue) {
+	private void setMappingValue(CFieldItem fiColumnInTheFile, ArrayList<CFieldItemMap> alCurrentMappings, String sColumnValue) throws Exception {
 		// Grab the name of the column
 		String sColumnName = fiColumnInTheFile.getElementName();
 		
@@ -225,7 +224,7 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 			// If the current mapping has the source column we're looking for then...
 			if(fiFieldItemMap.getSourceItem().getElementName().equals(sColumnName)) {
 				// Set the value in the destination item to be the value passed into this function
-				fiFieldItemMap.getDestinationItem().setValue(sColumnValue);
+				fiFieldItemMap.getDestinationItem().setValue(sColumnValue, false);
 			} // End if			
 		} // End of the for (CFieldItemMap fiFieldItemMap : alCurrentMappings) loop.
 	}
