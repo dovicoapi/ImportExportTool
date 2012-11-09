@@ -85,7 +85,7 @@ public class CCommonUILogic {
 		m_pTabControl.addTab("Settings", null, m_pSettingsTab, null);
 		
 		// Create our About Tab panel and add it to our tab control
-		m_pAboutTab = new CPanel_About("Import/Export Tool", "1.2"); 
+		m_pAboutTab = new CPanel_About("Import/Export Tool", "1.3"); 
 		m_pTabControl.addTab("About", null, m_pAboutTab, null);
 	}
 	
