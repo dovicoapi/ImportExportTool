@@ -77,7 +77,12 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 				
 				// Write out the value (surround with double-quotes if need be) 
 				if(bAddQuotes) { bwWriter.write("\""); }
-				bwWriter.write(fiFieldItem.getValue());
+				String outputValue = fiFieldItem.getValue();
+				if (outputValue != null) {
+					// replace newlines, tabs by space 
+					outputValue = outputValue.replaceAll("\\r\\n|\\r|\\n|\\t", " ");
+				}
+				bwWriter.write(outputValue);
 				if(bAddQuotes) { bwWriter.write("\""); }
 			} // End of the for (CFieldItem fiFieldItem: alFields) loop.
 			
