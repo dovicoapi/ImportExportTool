@@ -21,6 +21,10 @@ public class CCommonUILogic {
 	private int m_iPreviousTabIndex = -1;
 	private int m_iSettingsTabIndex = 2;
 	
+	private String m_sCompanyName;
+	private String m_sUserName;
+	private String m_sPassword;
+	
 	private String m_sConsumerSecret = "";
 	private String m_sDataAccessToken = "";
 	private Long m_lEmployeeID = null;
@@ -95,32 +99,38 @@ public class CCommonUILogic {
     /// <modified author="C. Gerard Gallant" date="2011-12-14" reason="Now receives lEmployeeID, sEmployeeFirstName, and sEmployeeLastName parameters. Also added logic to grab the employee id if we already have token values (for those who have already run this app before the employee id functionality was added in)"/>
 	/// <modified author="C. Gerard Gallant" date="2012-04-20" reason="Added code to use the constant for the Consumer Secret if it exists. Code has also been added to tell the Settings pane not to show the Consumer Secret text box if the constant has a value."/>
 	/// </history>
-	public void handlePageLoad(String sConsumerSecret, String sDataAccessToken, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName) 
+	public void handlePageLoad(String sDataAccessToken, String sCompanyName, String sUserName, String sPassword, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName) 
 	{ 
 		// We will hide the Consumer Secret field if the constant for the token is not an empty string. Pass the proper consumer secret value to our parent class
 		// if the constant was specified. If not, use the token that was last saved by the user.
 		boolean bHideConsumerSecretField = !Constants.CONSUMER_SECRET_API_TOKEN.isEmpty();
 		
+		m_sCompanyName = sCompanyName;
+		m_sUserName = sUserName;
+		m_sPassword = sPassword;
+		
 		// Remember the preferences specified
-		m_sConsumerSecret = (bHideConsumerSecretField ? Constants.CONSUMER_SECRET_API_TOKEN : sConsumerSecret);
+		//m_sConsumerSecret = (bHideConsumerSecretField ? Constants.CONSUMER_SECRET_API_TOKEN : sConsumerSecret);
 		m_sDataAccessToken = sDataAccessToken;
+		
+		
 		m_lEmployeeID = lEmployeeID;
 		m_sEmployeeFirstName = sEmployeeFirstName;
 		m_sEmployeeLastName = sEmployeeLastName;
 		
 		// Determine if the tokens have values or not
-		boolean bIsConsumerSecretEmpty = m_sConsumerSecret.isEmpty();
+		//boolean bIsConsumerSecretEmpty = m_sConsumerSecret.isEmpty();
 		boolean bIsDataAccessTokenEmpty = m_sDataAccessToken.isEmpty();
 		
 		
 		// Tell the Settings pane what the settings are (we are not concerned about the logged in employee's First and Last name in this app but rather than have
 		// to write upgrade code, like the code to come below, if that ever changes, we grab and store the values just in case)
-		m_pSettingsTab.setSettingsData(m_sConsumerSecret, m_sDataAccessToken, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, 
+		m_pSettingsTab.setSettingsData(Constants.CONSUMER_SECRET_API_TOKEN, sCompanyName, sUserName, sPassword, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, 
 				m_sEmployeeLastName, bHideConsumerSecretField);
 		
 		// If the Employee ID is 0 and the consumer secret and data access token have values then...(that means this application was run before the new functionality
 		// was added to the settings panel to grab the employee id/name and we now need to grab the employee id/name)
-		if(m_lEmployeeID == 0 && !bIsConsumerSecretEmpty && !bIsDataAccessTokenEmpty) {
+		if(m_lEmployeeID == 0 && !bIsDataAccessTokenEmpty) {
 			// We need to query the Employee ID and the easiest way to do so is to leverage the functionality now built into the settings panel. If for some reason
 			// the validation fails then...
 			if(!m_pSettingsTab.validateSettingsData()) {
@@ -137,7 +147,7 @@ public class CCommonUILogic {
 			
 		
 		// If either token value is empty then...
-		if(bIsConsumerSecretEmpty || bIsDataAccessTokenEmpty) {
+		if(bIsDataAccessTokenEmpty) {
 			// Make sure the Settings tab is selected
 			m_iSettingsTabIndex = 2;
 			m_pTabControl.setSelectedIndex(m_iSettingsTabIndex);
@@ -155,7 +165,10 @@ public class CCommonUILogic {
 	    {
 	    	// If everything validates OK for the Settings tab then...
 	    	if(m_pSettingsTab.validateSettingsData()) 
-	    	{		        				        		
+	    	{	
+	    		m_sCompanyName = m_pSettingsTab.getCompanyName();
+	    		m_sUserName = m_pSettingsTab.getUserName();
+	    		
 	    		// Grab the new settings values
 	    		m_sConsumerSecret = m_pSettingsTab.getConsumerSecret();
 	    		m_sDataAccessToken = m_pSettingsTab.getDataAccessToken();
@@ -185,6 +198,8 @@ public class CCommonUILogic {
 	// Methods returning the setting values
 	public String getConsumerSecret() { return m_sConsumerSecret; }
 	public String getDataAccessToken() { return m_sDataAccessToken; }
+	public String getCompanyName() { return m_sCompanyName; }
+	public String getUserName() { return m_sUserName; }
 	public Long getEmployeeID() { return m_lEmployeeID; }
 	public String getEmployeeFirstName() { return m_sEmployeeFirstName; }
 	public String getEmployeeLastName() { return m_sEmployeeLastName; }
