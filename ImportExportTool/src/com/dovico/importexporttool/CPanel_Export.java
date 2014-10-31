@@ -1,18 +1,24 @@
 package com.dovico.importexporttool;
 
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Hashtable;
 
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -24,16 +30,21 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.border.BevelBorder;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.dovico.commonlibrary.APIRequestResult;
 import com.dovico.commonlibrary.CDatePicker;
 import com.dovico.commonlibrary.CRESTAPIHelper;
 import com.dovico.commonlibrary.CXMLHelper;
-
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.FormLayout;
@@ -58,6 +69,16 @@ public class CPanel_Export extends JPanel {
 	// The Start and End dates of the date range when dealing with the Time Entry export
 	private Date m_dtDateRangeStart = null;
 	private Date m_dtDateRangeEnd = null;
+
+	private XPathFactory m_xPathFactory;
+
+	private JLabel loadingLabel;
+
+	private JButton cmdSaveAs;
+
+	private JButton cmdExport;
+
+	private JButton cmdFields;
 
 	
 	// Default constructor
@@ -129,7 +150,7 @@ public class CPanel_Export extends JPanel {
 		this.add(spFields, "4, 4, 5, 1, fill, fill");
 		
 		
-		JButton cmdFields = new JButton("Fields...");
+		cmdFields = new JButton("Fields...");
 		cmdFields.setToolTipText("Add/remove fields");
 		cmdFields.setFont(new Font("Arial", Font.PLAIN, 11));
 		cmdFields.setVerticalAlignment(SwingConstants.TOP);
@@ -193,7 +214,7 @@ public class CPanel_Export extends JPanel {
 		});
 		this.add(m_txtSaveAs, "4, 10, 7, 1, fill, default");
 		
-		JButton cmdSaveAs = new JButton("...");
+		cmdSaveAs = new JButton("...");
 		cmdSaveAs.setToolTipText("Choose the file save location.");
 		cmdSaveAs.setFont(new Font("Arial", Font.PLAIN, 11));
 		cmdSaveAs.addActionListener(new ActionListener() { 
@@ -203,25 +224,35 @@ public class CPanel_Export extends JPanel {
 		
 		
 		// Export button
-		JButton cmdExport = new JButton("Export");
+		cmdExport = new JButton("Export");
 		cmdExport.setFont(new Font("Arial", Font.PLAIN, 11));
 		cmdExport.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent arg0) { OnClick_cmdExport(); } 
 		});
 		this.add(cmdExport, "10, 12, 3, 1");
+		
+		URL imgsrc = getClass().getResource("/loading2.gif");
+		ImageIcon loading = new ImageIcon(imgsrc);
+		loadingLabel = new JLabel(loading);
+		loadingLabel.setVisible(false);
+		//loadingLabel.setSize(100, 100);
+		this.add(loadingLabel, "2, 12, left, default");
+		
+		this.m_xPathFactory = XPathFactory.newInstance();
 	}
 	
 		
 	// Returns the available values for the Data Source drop-down
 	private String[] getDataSourceValues() {
 		String[] arrItems = { 
-			Constants.API_RESOURCE_ITEM_CLIENTS, 
-			Constants.API_RESOURCE_ITEM_PROJECTS, 
-			Constants.API_RESOURCE_ITEM_TASKS,
-			Constants.API_RESOURCE_ITEM_EMPLOYEES, 
-			Constants.API_RESOURCE_ITEM_TIME_ENTRIES,
+			Constants.API_RESOURCE_ITEM_CLIENTS,
+			Constants.API_RESOURCE_ITEM_EMPLOYEES,
 			Constants.API_RESOURCE_ITEM_EXPENSE_CATEGORIES,
-			Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES 
+			Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES,
+			Constants.API_RESOURCE_ITEM_PROJECTS, 
+			Constants.API_RESOURCE_ITEM_TASKS, 
+			Constants.API_RESOURCE_ITEM_TEAMS,
+			Constants.API_RESOURCE_ITEM_TIME_ENTRIES
 		};
 		return arrItems;
 	}
@@ -244,7 +275,7 @@ public class CPanel_Export extends JPanel {
 		
 		// If the Time Entry selection was chosen then...
 		String sResource = (String)m_ddlDataSource.getSelectedItem();
-		if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES)){
+		if(sResource.equals(Constants.API_RESOURCE_ITEM_TIME_ENTRIES) || sResource.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)){
 			// Flag that we want the Date Range controls enabled
 			bEnableDateRangeControls = true;
 			sStartDateCaption = getCaptionFromDate(m_dtDateRangeStart);
@@ -317,7 +348,9 @@ public class CPanel_Export extends JPanel {
 	private void OnClick_cmdFields() {
 		// Create an instance of our Add/Remove Fields dialog. Tell the dialog which Data Source and which Fields are selected 
 		Dialog_ExportFields dlgFields = new Dialog_ExportFields();
-		dlgFields.setDataSourceAndSelectedFields((String)m_ddlDataSource.getSelectedItem(), m_lmFieldsModel.toArray());
+		String dataAccessToken = m_UILogic.getDataAccessToken();
+		String consumerSecret = Constants.CONSUMER_SECRET_API_TOKEN;
+		dlgFields.setDataSourceAndSelectedFields((String)m_ddlDataSource.getSelectedItem(), consumerSecret, dataAccessToken, m_lmFieldsModel.toArray());
 		dlgFields.setVisible(true);
 		
 		// If the dialog was closed as a result of the user clicking on the OK button then...
@@ -342,6 +375,15 @@ public class CPanel_Export extends JPanel {
 		JFileChooser dlgFileSaveAs = new JFileChooser();
 		dlgFileSaveAs.addChoosableFileFilter(new CSaveAsFileFilter(fFormatter.getSaveAsFileFilterDescription(), sFileFilterExtension));
 		
+		String filename = m_txtSaveAs.getText();
+		String exportPath = m_UILogic.getExportPath();
+		
+		if (filename != null && !filename.isEmpty()) {
+			dlgFileSaveAs.setCurrentDirectory(new File(m_txtSaveAs.getText()));
+		} else if (exportPath != "" && !exportPath.isEmpty()) {
+			dlgFileSaveAs.setCurrentDirectory(new File(m_UILogic.getExportPath()));
+		}
+		
 		// Show the File Save As dialog. If the user clicked OK/Save then...
 		if(dlgFileSaveAs.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
 			// Grab the Path (and file name). Convert the path to lower case for more accurate comparisons 
@@ -353,6 +395,7 @@ public class CPanel_Export extends JPanel {
 			
 			// Put the path for the file name into the text box
 			m_txtSaveAs.setText(sPath);
+			m_UILogic.setExportPath(sPath);
 		} // End if(dlgFileSaveAs.showSaveDialog(this) == JFileChooser.APPROVE_OPTION)
 	}
 	
@@ -362,62 +405,106 @@ public class CPanel_Export extends JPanel {
 		// If the validation fails then...
 		if(!validateForExport()) { return; }
 		
-		
-		boolean bErrorHappened = false;
-		BufferedWriter bwWriter = null;
-				
-		try {
-			// Get the selected formatter object from the Format drop-down and get the selected DataSource (if we are exporting Clients, Projects, Tasks, etc)
-			IExportFormatter fFormatter = (IExportFormatter)m_ddlFormat.getSelectedItem();
-			String sDataSource = (String)m_ddlDataSource.getSelectedItem();
+		final Hashtable<Component, Boolean> state = setState(null, false);
+		final IExportFormatter fFormatter = (IExportFormatter)m_ddlFormat.getSelectedItem();
+		final String sDataSource = (String)m_ddlDataSource.getSelectedItem();
+		final String sURI = CResourceHelper.getURIForResource(sDataSource, true, m_UILogic.getEmployeeID(), m_dtDateRangeStart, m_dtDateRangeEnd);
+		final String sMainElementName = CResourceHelper.getMainElementNameForResource(sDataSource);			
+		final ArrayList<CFieldItem> alFields = getFieldItemsArrayList();
 
-			// Get the URI needed for the Resource requested (employee id is currently only used for Time/Expense Imports to know if it should try to send the time/
-			// expense entries as approved entries or not; the date range start/end dates are only used by the export of time entries at this point)
-			String sURI = CResourceHelper.getURIForResource(sDataSource, true, m_UILogic.getEmployeeID(), m_dtDateRangeStart, m_dtDateRangeEnd);
-			String sMainElementName = CResourceHelper.getMainElementNameForResource(sDataSource);			
-			ArrayList<CFieldItem> alFields = getFieldItemsArrayList();
-			
-			// Find out if we are exporting Expense data and, if so, if one or more of the selected fields are for Expense Entry items 
-			boolean bExportDataWithExpenseEntryItems = areAnyFieldsForExpenseEntryItems(sDataSource, alFields);
-			
-			
-			// Open the file for writing (not appending - overwriting any data that might have been there from a previous export). Create a BufferedWriter object
-			// to make writing to the file easier.
-			FileWriter fwWriter = new FileWriter(m_txtSaveAs.getText(), false);
-			bwWriter = new BufferedWriter(fwWriter);						
-			
-			// Write out the column headers. If there was an issue flag that there was an error.
-			if(!fFormatter.WriteHeaders(alFields, bwWriter)) { bErrorHappened = true; }
-			else { // There were no issues in writing out the headers...
-				// Export the data specified by the Data Source drop-down and Fields list (pass in the URI needed for the first page of data, the name of the main
-				// element that the field values are to be grabbed from, the formatter object that handles writing to the file, the list of selected fields, and 
-				// the BufferedWriter object so that the necessary data can be written to the file)
-				if(!exportData(sURI, bExportDataWithExpenseEntryItems, alFields, sMainElementName, fFormatter, bwWriter)) { bErrorHappened = true; }
-			} // End if			 
-		} 
-		catch (IOException e) { 
-			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			bErrorHappened = true;
-		}
-		finally { // Happens whether or not there was an exception...
-            try {
-            	// Close the BufferedWriter
-                if(bwWriter != null) { 
-                	bwWriter.flush(); 
-                	bwWriter.close(); 
-                }
-            } catch (IOException e) {
-            	JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-    			bErrorHappened = true;
-            }
-		} // End of finally block
+		Thread thread = new Thread(new Runnable() {
 
+			@Override
+			public void run() {
+				boolean bErrorHappened = false;
+				BufferedWriter bwWriter = null;
+						
+				try {
+					// Get the selected formatter object from the Format drop-down and get the selected DataSource (if we are exporting Clients, Projects, Tasks, etc)
+
+					// Get the URI needed for the Resource requested (employee id is currently only used for Time/Expense Imports to know if it should try to send the time/
+					// expense entries as approved entries or not; the date range start/end dates are only used by the export of time entries at this point)
+					
+					// Find out if we are exporting Expense data and, if so, if one or more of the selected fields are for Expense Entry items 
+					boolean bExportDataWithExpenseEntryItems = areAnyFieldsForExpenseEntryItems(sDataSource, alFields);
+					
+					
+					// Open the file for writing (not appending - overwriting any data that might have been there from a previous export). Create a BufferedWriter object
+					// to make writing to the file easier.
+					FileWriter fwWriter = new FileWriter(m_txtSaveAs.getText(), false);
+					bwWriter = new BufferedWriter(fwWriter);						
+					
+					// Write out the column headers. If there was an issue flag that there was an error.
+					if(!fFormatter.WriteHeaders(alFields, bwWriter)) { bErrorHappened = true; }
+					else { // There were no issues in writing out the headers...
+						// Export the data specified by the Data Source drop-down and Fields list (pass in the URI needed for the first page of data, the name of the main
+						// element that the field values are to be grabbed from, the formatter object that handles writing to the file, the list of selected fields, and 
+						// the BufferedWriter object so that the necessary data can be written to the file)
+						if(!exportData(sURI, bExportDataWithExpenseEntryItems, alFields, sMainElementName, fFormatter, bwWriter)) { bErrorHappened = true; }
+					} // End if			 
+				} 
+				catch (IOException e) { 
+					JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+					bErrorHappened = true;
+				}
+				finally { // Happens whether or not there was an exception...
+		            try {
+		            	// Close the BufferedWriter
+		                if(bwWriter != null) { 
+		                	bwWriter.flush(); 
+		                	bwWriter.close(); 
+		                }
+		            } catch (IOException e) {
+		            	JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		    			bErrorHappened = true;
+		            }
+				} // End of finally block
+
+				setState(state, true);
+				// If there were no errors then tell the user we're done
+				if(!bErrorHappened){ JOptionPane.showMessageDialog(null, "Export completed successfully", "Export Complete", JOptionPane.INFORMATION_MESSAGE); }
+			}});
 		
-		// If there were no errors then tell the user we're done
-		if(!bErrorHappened){ JOptionPane.showMessageDialog(null, "Done", "Export Complete", JOptionPane.INFORMATION_MESSAGE); }
+		thread.start();
 	}
 	
 	
+	protected Hashtable<Component, Boolean> setState(Hashtable<Component, Boolean> previousState, boolean enabled) {
+		Hashtable<Component, Boolean> states = new Hashtable<Component, Boolean>();
+		states.put(m_cmdDateRangeStart, m_cmdDateRangeStart.isEnabled());
+		states.put(m_cmdDateRangeFinish, m_cmdDateRangeFinish.isEnabled());
+		states.put(m_ddlDataSource, m_ddlDataSource.isEnabled());
+		states.put(m_ddlFormat, m_ddlFormat.isEnabled());
+		states.put(m_lstFields, m_lstFields.isEnabled());
+		states.put(m_txtSaveAs, m_txtSaveAs.isEnabled());
+		states.put(cmdExport, cmdExport.isEnabled());
+		states.put(cmdSaveAs, cmdSaveAs.isEnabled());
+		states.put(cmdFields, cmdFields.isEnabled());
+		
+		loadingLabel.setVisible(!enabled);
+		m_UILogic.disableTabs(!enabled);
+		
+		enable(m_cmdDateRangeFinish, previousState, enabled);
+		enable(m_cmdDateRangeStart, previousState, enabled);
+		enable(m_ddlDataSource, previousState, enabled);
+		enable(m_ddlFormat, previousState, enabled);
+		enable(m_lstFields, previousState, enabled);
+		enable(m_txtSaveAs, previousState, enabled);
+		enable(cmdExport, previousState, enabled);
+		enable(cmdSaveAs, previousState, enabled);
+		enable(cmdFields, previousState, enabled);
+		
+		return states;
+	}
+	
+	private void enable(Component c, Hashtable<Component, Boolean> s, boolean e) {
+		if (s != null && s.containsKey(c)) {
+			c.setEnabled(s.get(c));
+		} else {
+			c.setEnabled(e);
+		}
+	}
+
 	// Validates to make sure the necessary data is present in order to do an Export
 	private boolean validateForExport() {
 		// If there are no fields selected then...
@@ -490,6 +577,7 @@ public class CPanel_Export extends JPanel {
 		NodeList xnlMainElements = xeDocElement.getElementsByTagName(sMainElementName);
 		int iNodeListCount = xnlMainElements.getLength();
 		for(int iNodeListCounter = 0; iNodeListCounter < iNodeListCount; iNodeListCounter++) {
+			Thread.yield();
 			// Grab the current Main Element and clear the values from the Fields (just in case the previous loop had data that this loop does not - especially
 			// important when dealing with the expense entry export)
 			xeMainElement = (Element)xnlMainElements.item(iNodeListCounter);
@@ -611,14 +699,43 @@ public class CPanel_Export extends JPanel {
 					
 		// If the current field is NOT at the root of the Main Element then...
 		if(!fiFieldItem.isAtRootElementLevel()) {
-			// Grab the current field's parent element. If it was found then grab the parent element from the node list					
-			NodeList xnlFieldParentElements = xeMainElement.getElementsByTagName(fiFieldItem.getParentElementName());
-			if(xnlFieldParentElements.getLength() > 0) { xeFieldParentElement = (Element)xnlFieldParentElements.item(0); }
+			if (fiFieldItem.isCustomTemplate()) {
+				try {
+					processCustomField(xeMainElement, fiFieldItem);
+					return;
+				} catch (XPathExpressionException e) {
+				}
+			} else {
+				// Grab the current field's parent element. If it was found then grab the parent element from the node list					
+				NodeList xnlFieldParentElements = xeMainElement.getElementsByTagName(fiFieldItem.getParentElementName());
+				if(xnlFieldParentElements.getLength() > 0) { xeFieldParentElement = (Element)xnlFieldParentElements.item(0); }
+			}
 		} // End if(!fiFieldItem.isAtRootElementLevel())
 		
 		try{
 			// Grab the field item's value
 			fiFieldItem.setValue(CXMLHelper.getChildNodeValue(xeFieldParentElement, fiFieldItem.getElementName()), false);
 		} catch (Exception e) {}
+	}
+
+
+	private void processCustomField(Element xeMainElement,
+			CFieldItem fiFieldItem) throws XPathExpressionException {
+		XPath path = m_xPathFactory.newXPath();
+		XPathExpression expr = path.compile("./CustomFields/CustomField[./TemplateID='" + fiFieldItem.getCustomInfo().getId() + "']/Values/Value");
+		NodeList result = (NodeList)expr.evaluate(xeMainElement, XPathConstants.NODESET);
+		StringBuilder builder = new StringBuilder();
+		for(int i = 0; i < result.getLength(); i++) {
+			Node node = result.item(i);
+			String value = node.getTextContent();
+			if (builder.length() > 0)
+				builder.append("|");
+			builder.append(value);
+		}
+		
+		try {
+			fiFieldItem.setValue(builder.toString(), false);
+		} catch (Exception e) {
+		}
 	}
 }

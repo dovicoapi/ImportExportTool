@@ -2,6 +2,7 @@ package com.dovico.importexporttool;
 
 import java.awt.*;
 import java.awt.event.ActionListener;
+
 import javax.swing.*;
 import javax.swing.UIManager.LookAndFeelInfo;
 import javax.swing.event.*;
@@ -30,6 +31,10 @@ public class CCommonUILogic {
 	private Long m_lEmployeeID = null;
 	private String m_sEmployeeFirstName = "";
 	private String m_sEmployeeLastName = "";
+
+	private String m_importPath;
+
+	private String m_exportPath;
 	
 	
 	// Overloaded constructor
@@ -89,7 +94,7 @@ public class CCommonUILogic {
 		m_pTabControl.addTab("Settings", null, m_pSettingsTab, null);
 		
 		// Create our About Tab panel and add it to our tab control
-		m_pAboutTab = new CPanel_About("Import/Export Tool", "1.3"); 
+		m_pAboutTab = new CPanel_About("Import/Export Tool", "2.0"); 
 		m_pTabControl.addTab("About", null, m_pAboutTab, null);
 	}
 	
@@ -99,7 +104,7 @@ public class CCommonUILogic {
     /// <modified author="C. Gerard Gallant" date="2011-12-14" reason="Now receives lEmployeeID, sEmployeeFirstName, and sEmployeeLastName parameters. Also added logic to grab the employee id if we already have token values (for those who have already run this app before the employee id functionality was added in)"/>
 	/// <modified author="C. Gerard Gallant" date="2012-04-20" reason="Added code to use the constant for the Consumer Secret if it exists. Code has also been added to tell the Settings pane not to show the Consumer Secret text box if the constant has a value."/>
 	/// </history>
-	public void handlePageLoad(String sDataAccessToken, String sCompanyName, String sUserName, String sPassword, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName) 
+	public void handlePageLoad(String sDataAccessToken, String sCompanyName, String sUserName, String sPassword, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName, String importPath, String exportPath) 
 	{ 
 		// We will hide the Consumer Secret field if the constant for the token is not an empty string. Pass the proper consumer secret value to our parent class
 		// if the constant was specified. If not, use the token that was last saved by the user.
@@ -118,6 +123,9 @@ public class CCommonUILogic {
 		m_sEmployeeFirstName = sEmployeeFirstName;
 		m_sEmployeeLastName = sEmployeeLastName;
 		
+		m_importPath = importPath;
+		m_exportPath = exportPath;
+		
 		// Determine if the tokens have values or not
 		//boolean bIsConsumerSecretEmpty = m_sConsumerSecret.isEmpty();
 		boolean bIsDataAccessTokenEmpty = m_sDataAccessToken.isEmpty();
@@ -125,7 +133,7 @@ public class CCommonUILogic {
 		
 		// Tell the Settings pane what the settings are (we are not concerned about the logged in employee's First and Last name in this app but rather than have
 		// to write upgrade code, like the code to come below, if that ever changes, we grab and store the values just in case)
-		m_pSettingsTab.setSettingsData(Constants.CONSUMER_SECRET_API_TOKEN, sCompanyName, sUserName, sPassword, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, 
+		m_pSettingsTab.setSettingsData(Constants.CONSUMER_SECRET_API_TOKEN, sDataAccessToken, sCompanyName, sUserName, sPassword, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, 
 				m_sEmployeeLastName, bHideConsumerSecretField);
 		
 		// If the Employee ID is 0 and the consumer secret and data access token have values then...(that means this application was run before the new functionality
@@ -147,11 +155,11 @@ public class CCommonUILogic {
 			
 		
 		// If either token value is empty then...
-		if(bIsDataAccessTokenEmpty) {
+		//if(bIsDataAccessTokenEmpty) {
 			// Make sure the Settings tab is selected
 			m_iSettingsTabIndex = 2;
 			m_pTabControl.setSelectedIndex(m_iSettingsTabIndex);
-		} // End if(bIsConsumerSecretEmpty || bIsDataAccessTokenEmpty)
+		//} // End if(bIsConsumerSecretEmpty || bIsDataAccessTokenEmpty)
 	}	
 	
 	
@@ -194,6 +202,9 @@ public class CCommonUILogic {
 	    m_iPreviousTabIndex = m_pTabControl.getSelectedIndex();
 	}
 	
+	public void disableTabs(boolean disabled) {
+		m_pTabControl.setEnabled(!disabled);
+	}
 		
 	// Methods returning the setting values
 	public String getConsumerSecret() { return m_sConsumerSecret; }
@@ -203,4 +214,8 @@ public class CCommonUILogic {
 	public Long getEmployeeID() { return m_lEmployeeID; }
 	public String getEmployeeFirstName() { return m_sEmployeeFirstName; }
 	public String getEmployeeLastName() { return m_sEmployeeLastName; }
+	public String getImportPath() { return m_importPath; }
+	public String getExportPath() { return m_exportPath; }
+	public void setImportPath(String path) { m_importPath = path; m_alSettingsChanged.actionPerformed(null); }
+	public void setExportPath(String path) { m_exportPath = path; m_alSettingsChanged.actionPerformed(null); }
 }

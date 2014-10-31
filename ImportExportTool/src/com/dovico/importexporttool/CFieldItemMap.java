@@ -2,6 +2,8 @@ package com.dovico.importexporttool;
 
 import org.w3c.dom.Element;
 
+import com.dovico.commonlibrary.CXMLHelper;
+
 public class CFieldItemMap {
 	private CFieldItem m_fiSourceItem = null;
 	private CFieldItem m_fiDestinationItem = null;
@@ -28,6 +30,16 @@ public class CFieldItemMap {
 		
 		// Grab the 'Destination' element and from that pass the constructor the 'FieldItem' element
 		xeRoot = (Element)xeElement.getElementsByTagName("Destination").item(0);
-		m_fiDestinationItem = new CFieldItem((Element)xeRoot.getElementsByTagName("FieldItem").item(0));
+		Element fieldItem =(Element)xeRoot.getElementsByTagName("FieldItem").item(0);
+		if (CXMLHelper.getChildNode(fieldItem, "Source") != null) {
+			m_fiDestinationItem = new CIdFieldItem(fieldItem);
+		} else {
+			m_fiDestinationItem = new CFieldItem(fieldItem);
+		}
+	}
+
+	@Override
+	public String toString() {
+		return this.m_fiSourceItem != null ? this.m_fiSourceItem.toString() : "" + " -> " + this.m_fiDestinationItem.toString();
 	}
 }

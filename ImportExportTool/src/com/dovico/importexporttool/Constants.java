@@ -12,6 +12,8 @@ public class Constants {
 	public static String PREFS_KEY_EMPLOYEE_ID = "EmployeeID";
 	public static String PREFS_KEY_EMPLOYEE_FIRST = "EmployeeFirstName";
 	public static String PREFS_KEY_EMPLOYEE_LAST = "EmployeeLastName";
+	public static String PREFS_IMPORT_PATH = "ImportPath";
+	public static String PREFS_EXPORT_PATH = "ExportPath";
 	
 	public static String NEXT_PAGE_URI = "NextPageURI";
 	public static String GET_EXPENSE_ENTRY_ITEMS_URI = "GetExpenseEntryItemsURI";
@@ -26,16 +28,28 @@ public class Constants {
 	public static String API_RESOURCE_ITEM_TIME_ENTRIES = "Time Entries";
 	public static String API_RESOURCE_ITEM_EXPENSE_CATEGORIES = "Expense Categories";
 	public static String API_RESOURCE_ITEM_EXPENSE_ENTRIES = "Expense Entries";
-	
-	
+	public static final String API_RESOURCE_ITEM_TEAMS = "Teams";
+
+	public static String CUSTOM_FIELD_ID_CUSTOMER = "C";
+	public static String CUSTOM_FIELD_ID_PROJECT = "P";
+	public static String CUSTOM_FIELD_ID_TASK = "T";
+	public static String CUSTOM_FIELD_ID_EMPLOYEE = "E";
+	public static String CUSTOM_FIELD_ID_EXPENSECATEGORY = "A";
+	public static String CUSTOM_FIELD_ID_TIMEENTRY = "M";
+	public static String CUSTOM_FIELD_ID_EXPENSEENTRY = "X";
+	public static final String CUSTOM_FIELD_ID_TEAMS = "G";
+
 	public static Long ADMIN_TOKEN_EMPLOYEE_ID = 99L;
 	
 	// The REST API returns and expects dates in this format
 	public static String XML_DATE_FORMAT = "yyyy-MM-dd";
+	public static String CUSTOM_DATE_FORMAT = "DD/MM/yyyy";
 	
 	// The API version that we are targeting
-	public static String API_VERSION_TARGETED = "2";
+	public static String API_VERSION_TARGETED = "4";
 	
 	public static String IMPORT_STATE_FILE_NAME = "importstate.xml";
 	public static String EXPORT_STATE_FILE_NAME = "exportstate.xml";
+	
+	public static String EXCLUSIVE_CHOICE_NONE = "[None]";
 }

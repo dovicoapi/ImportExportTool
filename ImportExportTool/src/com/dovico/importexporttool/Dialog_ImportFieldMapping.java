@@ -15,10 +15,12 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTable;
+
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+
 import javax.swing.ListSelectionModel;
 
 
@@ -179,11 +181,11 @@ public class Dialog_ImportFieldMapping extends JDialog {
 	
 	
 	// Call this function before you show this dialog so that the lists are populated properly based on the Selected file and currently selected items	
-	public void setSourceColumnsDestinationAndMapping(ArrayList<CFieldItem> alColumnsFromTheFile, String sDestination, ArrayList<CFieldItemMap> alCurrentMappings){
+	public void setSourceColumnsDestinationAndMapping(String consumerSecret, String userToken, ArrayList<CFieldItem> alColumnsFromTheFile, String sDestination, ArrayList<CFieldItemMap> alCurrentMappings){
 		// Fill the source list with the columns that are in the file, fill the destination list with the fields that match the selected destination, and then
 		// fill the mapping table with the current mappings
 		fillSourceList(alColumnsFromTheFile);
-		fillDestinationList(sDestination);
+		fillDestinationList(sDestination, consumerSecret, userToken);
 		fillMappingTable(alCurrentMappings);				
 	}
 	
@@ -196,10 +198,10 @@ public class Dialog_ImportFieldMapping extends JDialog {
 	
 	
 	// Helper that fills the Destination list with the fields available for the selected destination
-	private void fillDestinationList(String sDestination) {
+	private void fillDestinationList(String sDestination, String consumerSecret, String userToken) {
 		// Create a Generic list for the Destination fields. Get the fields based on the specified destination passed in
 		ArrayList<CFieldItem> alDestinationFields = new ArrayList<CFieldItem>();
-		CResourceHelper.getAPIFieldsForResource(sDestination, false, alDestinationFields);
+		CResourceHelper.getAPIFieldsForResource(sDestination, consumerSecret, userToken, false, alDestinationFields);
 		
 		// Loop through the fields adding them to the Destination list
 		for (CFieldItem fiFieldItem : alDestinationFields) { m_lmDestinationModel.addElement(fiFieldItem); }
@@ -276,12 +278,30 @@ public class Dialog_ImportFieldMapping extends JDialog {
 	
 	
 	// User clicked on the OK button
+	@SuppressWarnings("unchecked")
 	private void OnClick_cmdOK() {		
 		// If no fields have been mapped then...
 		if(m_tmMappingModel.getRowCount() == 0) {
 			JOptionPane.showMessageDialog(null, "Please map at least one field for import", "Error", JOptionPane.ERROR_MESSAGE);
 			return;
 		} // End if(m_tmMappingModel.getRowCount() == 0)
+		
+		for(CFieldItem field : (ArrayList<CFieldItem>)java.util.Collections.list(m_lmDestinationModel.elements())) {
+			if (field.isRequired()) {
+				boolean found = false;
+				for(int iRowIndex = 0; iRowIndex < m_tmMappingModel.getRowCount(); iRowIndex++) {
+					CFieldItem fiMapDestination = (CFieldItem)m_tmMappingModel.getValueAt(iRowIndex, 1);
+					if (fiMapDestination.getElementName().equals(field.getElementName())) {
+						found = true;
+						break;
+					}
+				}
+				if (!found) {
+					JOptionPane.showMessageDialog(null, String.format("%s is a required field and must be mapped", field.getCaption()), "Error", JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+			}
+		}
 		
 		// Flag that the OK button has been pressed and then hide this window so that the caller can now continue processing 
 		m_bOKButtonPressed = true;

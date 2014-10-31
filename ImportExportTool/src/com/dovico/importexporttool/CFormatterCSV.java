@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -37,7 +38,7 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 				
 				
 				// Write out the field's caption/display name 
-				bwWriter.write(("\"" + fiFieldItem.toString() + "\"")); 
+				bwWriter.write((fiFieldItem.toString())); 
 			} // End of the for (CFieldItem fiFieldItem: alFields) loop.
 			
 			
@@ -73,7 +74,7 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 				// Get the field type that we're dealing with. If we're dealing with a String or Date value then we add double quotes around the value. 
 				// Otherwise, we do not.
 				iFieldType = fiFieldItem.getFieldType();
-				bAddQuotes = ((iFieldType == CFieldItem.FieldItemType.String) || (iFieldType == CFieldItem.FieldItemType.Date));
+				bAddQuotes = iFieldType != CFieldItem.FieldItemType.Number;
 				
 				// Write out the value (surround with double-quotes if need be) 
 				if(bAddQuotes) { bwWriter.write("\""); }
@@ -104,12 +105,12 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 	// IMPORT methods:
 	//------------------
 	// Function that is called to read in the file's column headers (if there are column headers for the file type)
-	public Result ReadHeaders(BufferedReader brReader, ArrayList<CFieldItem> alReturnColumnsInTheFile) {
-		Result iResult = Result.AllOK; 
+	public ImportResult ReadHeaders(BufferedReader brReader, ArrayList<CFieldItem> alReturnColumnsInTheFile) {
+		ImportResult iResult = ImportResult.ALLOK; 
 		
 		try {
 			// Grab the first line from the text file (this is our column headers line) and then split the string at the comma (,)
-			String sFirstLine = brReader.readLine();
+			String sFirstLine = readLine(brReader);
 			String[] arrColumns = sFirstLine.split(",");
 			
 			// Loop through our list of columns...
@@ -120,12 +121,12 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 				sColumn = sColumn.replaceFirst("\"$", "");
 				
 				// Create the field item (we just specify the field type is string because we really have no idea at this point)
-				alReturnColumnsInTheFile.add(new CFieldItem(0, sColumn, sColumn, FieldItemType.String));
+				alReturnColumnsInTheFile.add(new CFieldItem(0, sColumn, sColumn, FieldItemType.String, false));
 			} // End of the for (String sColumn : arrColumns) loop.			
 		}
 		catch (IOException e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			iResult = Result.Error;
+			iResult = new ImportResult(Result.Error, e.getMessage());
 		} 
 		
 		// Tell the calling function if everything went OK
@@ -136,24 +137,24 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 	// Function that is called to read in one record from the file at a time. A flag is passed in indicating if this function is being called for the first
 	// line (for CSV files, the first line is the column headers so we will skip that line) 
 	// The record's values are stored in the alCurrentMappings' Destination field item.
-	public Result ReadRecord(BufferedReader brReader, boolean bFirstLine, ArrayList<CFieldItem> alColumnsInTheFile, ArrayList<CFieldItemMap> alCurrentMappings) {
-		Result iResult = Result.AllOK; 
-		
+	public ImportResult ReadRecord(BufferedReader brReader, boolean bFirstLine, ArrayList<CFieldItem> alColumnsInTheFile, ArrayList<CFieldItemMap> alCurrentMappings) {
+		ImportResult iResult = ImportResult.ALLOK; 
+		List<String> formatErrors = new ArrayList<String>();
 		try {
 			// Read in the current line of data. Loop while the string is not null but it IS empty...(needed to prevent an empty element from being sent to the
 			// REST API for the POST when all we have is an extra line feed at the end of the file)
 			String sLine = null;
 			do { 
-				sLine = brReader.readLine(); 
+				sLine = readLine(brReader); 
 			} while((sLine != null) && (sLine.isEmpty()));
 			
 			// If this is the first line of data in the file AND we have not yet reached the end of the file then...(our first line is the column headers so we 
 			// want to skip to the next line)
-			if(bFirstLine && (sLine != null)) { sLine = brReader.readLine(); }
+			if(bFirstLine && (sLine != null)) { sLine = readLine(brReader); }
 												
 			
 			// If we've reached the end of the file then...
-			if(sLine == null) { iResult = Result.EndOfFile; }
+			if(sLine == null) { iResult = ImportResult.ENDOFFILE; }
 			else { // We have a line of data to parse...
 				// We write out our CSV data with strings and dates being surrounded by double quotes and all other data types (integer, float, etc) not being
 				// surrounded by double quotes. We don't want to split a string column at a comma that is part of the string so we manually step through the
@@ -165,7 +166,7 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 				
 				// Get the length of the string and loop while the string is longer than 0 characters....
 				int iLineLength = sLine.length();
-				while(iLineLength > 0) {
+				while(iLineLength > 0 && iColIndex < alColumnsInTheFile.size()) {
 					iAdjustIndex = 0;
 					
 					// If the first character is a double-quote character then...(the current column is a string)
@@ -187,12 +188,16 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 										
 					// Grab the current column's data. If we're dealing with a string column then start pulling the current column's data at character 2 (skipping
 					// the first double-quote character)
-					sCurrentColumnValue = sLine.substring(iAdjustIndex, iNextPos);
+					sCurrentColumnValue = sLine.substring(iAdjustIndex, iNextPos).replaceAll("\"\"",  "\"");
 					
 					// Pass the value to the following function so that the value can be added to the correct Destination item in the Mapping's list (we also pass
 					// in the column from alColumnsInTheFile that matches the current column value's index so that the function can find the proper 
 					// source/destination maps to modify)
+					try {
 					setMappingValue((CFieldItem)alColumnsInTheFile.get(iColIndex), alCurrentMappings, sCurrentColumnValue);
+					} catch(FormattingException fe) {
+						formatErrors.add(fe.getMessage());
+					}
 										
 					
 					// Adjust the iNextPos value to be past the comma (and double-quote if iAdjustIndex is 1. if not a string, iAdjustIndex is 0). If we have 
@@ -207,19 +212,88 @@ public class CFormatterCSV implements IExportFormatter, IImportFormatter {
 					// Increment the column index value
 					iColIndex++; 
 				} // End of the while(iLineLength > 0) loop.
-			} // End if(sLine == null)		
+
+				for (CFieldItemMap fiFieldItemMap : alCurrentMappings) {
+					CFieldItem dest = fiFieldItemMap.getDestinationItem(); 
+
+					if (dest.isRequired() && (dest.getValue() == null || dest.getValue().trim().equalsIgnoreCase(""))) {
+						formatErrors.add(String.format("%s is a required field and must have a value.", dest.getCaption()));
+					}
+				}
+			} // End if(sLine == null)
+			
+			
+			if (formatErrors.size() > 0) {
+				iResult = new ImportResult(Result.FormatError, formatErrors);
+			}
 		} catch (Exception e) {
 			JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			iResult = Result.Error;
+			iResult = new ImportResult(Result.Error, e.getMessage());
 		}
 		
 		// Tell the caller if everything is OK or not
 		return iResult;
 	}
 	
+	protected String readLine(BufferedReader brReader) throws IOException {
+		StringBuilder builder = new StringBuilder();
+		int ch;
+		boolean lf = false;
+		boolean cr = false;
+		boolean inQuotes = false;
+		char lastChar = 0;
+		char pending = 0;
+		boolean atLeastOnce = false;
+		
+		while(!(lf & cr & !inQuotes) && (ch = brReader.read()) >= 0) {
+			char value = (char)ch;
+			atLeastOnce = true;
+			if (ch != 0x0d && ch != 0x0a) {
+				lf = false;
+				cr = false;
+				
+				if (value == '"') {
+					if (pending == '"') {
+						builder.append(value);
+						pending = 0;
+					} else {
+						pending = value;
+						continue;
+					}
+				} else {
+					if (pending == '"') {
+						inQuotes = !inQuotes;
+						builder.append(pending);
+						pending = 0;
+					}
+				}
+								
+				builder.append(value);
+			} else {
+				if (pending == '"') {
+					inQuotes = !inQuotes;
+					builder.append(pending);
+					pending = 0;
+				}
+				if (ch == 0x0d)
+					cr = true;
+				if (ch == 0x0a)
+					lf = true;
+				if (inQuotes)
+					builder.append(value);
+			}
+			lastChar = value;
+		}
+		
+		if (pending != 0)
+			builder.append((char)pending);
+		
+		return atLeastOnce ? builder.toString() : null;
+	}
+	
 	
 	// Puts the column value into the Destination item's value for each mapping that contains our source column  
-	private void setMappingValue(CFieldItem fiColumnInTheFile, ArrayList<CFieldItemMap> alCurrentMappings, String sColumnValue) throws Exception {
+	private void setMappingValue(CFieldItem fiColumnInTheFile, ArrayList<CFieldItemMap> alCurrentMappings, String sColumnValue) throws FormattingException {
 		// Grab the name of the column
 		String sColumnName = fiColumnInTheFile.getElementName();
 		

@@ -52,12 +52,14 @@ public class Form_Main {
 				String sEmployeeID = prefs.get(Constants.PREFS_KEY_EMPLOYEE_ID, "0");
 				String sEmployeeFirstName = prefs.get(Constants.PREFS_KEY_EMPLOYEE_FIRST, "");
 				String sEmployeeLastName = prefs.get(Constants.PREFS_KEY_EMPLOYEE_LAST, "");
+				String importPath = prefs.get(Constants.PREFS_IMPORT_PATH, "");
+				String exportPath = prefs.get(Constants.PREFS_EXPORT_PATH, "");
 												
-				m_UILogic.handlePageLoad(sDataAccessToken, sCompanyName, sUserName, "", Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName); 
+				m_UILogic.handlePageLoad(sDataAccessToken, sCompanyName, sUserName, "", Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName, importPath, exportPath); 
 			}
 		});
 		m_frmDovicoImportExport.setTitle("DOVICO - Import/Export Tool");
-		m_frmDovicoImportExport.setBounds(100, 100, 477, 400);
+		m_frmDovicoImportExport.setBounds(100, 100, 477, 440);
 		m_frmDovicoImportExport.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		
@@ -87,6 +89,8 @@ public class Form_Main {
 				prefs.put(Constants.PREFS_KEY_EMPLOYEE_ID, Long.toString(m_UILogic.getEmployeeID()));
 				prefs.put(Constants.PREFS_KEY_EMPLOYEE_FIRST, m_UILogic.getEmployeeFirstName());
 				prefs.put(Constants.PREFS_KEY_EMPLOYEE_LAST, m_UILogic.getEmployeeLastName());
+				prefs.put(Constants.PREFS_EXPORT_PATH, m_UILogic.getExportPath());
+				prefs.put(Constants.PREFS_IMPORT_PATH, m_UILogic.getImportPath());
 			}
 		};
 	}	

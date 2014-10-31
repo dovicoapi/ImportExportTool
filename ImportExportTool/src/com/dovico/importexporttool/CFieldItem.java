@@ -1,17 +1,21 @@
 package com.dovico.importexporttool;
 
 import com.dovico.commonlibrary.CXMLHelper;
-import org.w3c.dom.Element;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+
+import java.sql.Savepoint;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 
 
 public class CFieldItem {
-	public enum FieldItemType { String, Number, Date };
+	public enum FieldItemType { String, Number, Date, MultipleChoice, ExclusiveChoice };
 	
 	private int m_iOrder = 0; // Only an issue when POST/PUT data because, at that point, the order of the fields matters 
 	private String m_sCaption = ""; // Display friendly name (e.g. Project ID rather than ProjectID for example)
@@ -21,11 +25,19 @@ public class CFieldItem {
 	private boolean m_bIsAtRootElementLevel = true;
 	private String m_sParentElementName = "";
 	private String m_sRootElementName = "";
-	
+	private CCustomFieldInfo m_custFieldInfo;
+	private boolean m_required;
+	private int m_stringLength = 250;
 	
 	// Overloaded constructor (simply calls our other overloaded constructor - indicates that this element is at the root of the main element that we will be 
 	// parsing)
-	public CFieldItem(int iOrder, String sCaption, String sElementName, FieldItemType iFieldType) { this(iOrder, sCaption, sElementName, iFieldType, true, "", ""); }
+	public CFieldItem(int iOrder, String sCaption, String sElementName, FieldItemType iFieldType, boolean required) { this(iOrder, sCaption, sElementName, iFieldType, true, "", "", required); }
+
+	public CFieldItem(int iOrder, String sCaption, String sElementName, FieldItemType iFieldType, CCustomFieldInfo info, boolean required) { 
+		this(iOrder, sCaption, sElementName, iFieldType, true, "", "", required);
+		this.m_custFieldInfo = info;
+		this.m_bIsAtRootElementLevel = false;
+	}
 	
 	
 	// Overloaded constructor. Used when the field is not at the root of the main element that we will be parsing.
@@ -43,15 +55,15 @@ public class CFieldItem {
 	//
 	// If we only wanted the Name value then we don't need to call this overload since that value is part of the main element. If we want the Client\ID value,
 	// however, then that's where this overload comes into play. We specify the parent element of this item...in this case the parent element would be 'Client'.
-	public CFieldItem(int iOrder, String sCaption, String sElementName, FieldItemType iFieldType, boolean bIsAtRootElementLevel, String sParentElementName) {
+	public CFieldItem(int iOrder, String sCaption, String sElementName, FieldItemType iFieldType, boolean bIsAtRootElementLevel, String sParentElementName, boolean required) {
 		// Call the overloaded version of this constructor to handle the setting of the field values
-		this(iOrder, sCaption, sElementName, iFieldType, bIsAtRootElementLevel, sParentElementName, "");
+		this(iOrder, sCaption, sElementName, iFieldType, bIsAtRootElementLevel, sParentElementName, "", required);
 	}
 	
 	
 	// Overloaded constructor that accepts a Root Element Name value
 	public CFieldItem(int iOrder, String sCaption, String sElementName, FieldItemType iFieldType, boolean bIsAtRootElementLevel, String sParentElementName, 
-		String sRootElementName) {
+		String sRootElementName, boolean required) {
 		m_iOrder = iOrder;
 		m_sCaption = sCaption;
 		m_sElementName = sElementName;
@@ -59,6 +71,7 @@ public class CFieldItem {
 		m_bIsAtRootElementLevel = bIsAtRootElementLevel;
 		m_sParentElementName = sParentElementName;
 		m_sRootElementName = sRootElementName;
+		m_required = required;
 	}
 	
 	// Overloaded constructor for when we're pulling the saved state data back in when re-opening the view
@@ -91,50 +104,42 @@ public class CFieldItem {
 	
 	
 	// Sets/Gets the value for this field (when it's been parsed from the file or REST API results)
-	public void setValue(String sValue, boolean bClearingValue) throws Exception { 
+	public void setValue(String sValue, boolean bClearingValue) throws FormattingException { 
 		// Only check if we're not being called to clear the value AND if we're a date column then...(make sure the value passed in is formatted correctly)
-		if(!bClearingValue && m_iFieldType.equals(FieldItemType.Date)) { validateDate(sValue); }
-		
+		if(!bClearingValue) {
+			switch(this.m_iFieldType) {
+				case Number:
+					try {
+						Validations.isDouble(sValue);
+					} catch (ParseException ex) {
+						HandleNumberException(sValue);
+					}
+					break;
+				case String:
+					//Validations.length(sValue, m_sCaption);
+					if (sValue.length() > m_stringLength) {
+						sValue = sValue.substring(0, m_stringLength);
+					}
+					break;
+				case Date:
+					Validations.isDateInRange(sValue, m_sCaption, this.m_custFieldInfo != null && m_custFieldInfo.getType() == FieldItemType.Date);
+					break;
+				default:
+					if(m_custFieldInfo != null) {
+						m_custFieldInfo.validate(this.m_sCaption, sValue);
+					}
+					break;
+			}
+		}
+
 		m_sFieldValue = sValue;	
 	}
+	
+	protected void HandleNumberException(String sValue) throws FormattingException {
+		throw new FormattingException("%s must be a number in the format 9999.99 (got %s)", this.m_sCaption, sValue);
+	}
+
 	public String getValue() { return m_sFieldValue; }
-	
-	private void validateDate(String sValue) throws Exception{
-		String sErrorMsg = "";
-		
-		// Dates are expected in the format: yyyy-MM-dd
-		SimpleDateFormat sdfDate = new SimpleDateFormat(Constants.XML_DATE_FORMAT);
-		try {
-			// Parse the date string to ensure it's in the proper format
-			Date dtDate = sdfDate.parse(sValue);
-			if(!validateDateRange(dtDate)){ sErrorMsg = ("The date '"+ sValue +"' does not fall within the required date range of 1900-01-01 to 2199-12-31"); }
-		} catch (ParseException e) { sErrorMsg = ("The date '"+ sValue +"' must be in the format yyyy-MM-dd."); }
-
-		
-		if(!sErrorMsg.isEmpty()){ throw new Exception(sErrorMsg); }
-	
-	}
-
-	private boolean validateDateRange(Date dtValue){
-		Calendar cal = Calendar.getInstance();
-		cal.set(Calendar.YEAR, 1900);
-		cal.set(Calendar.MONTH, 0);//zero-based!
-		cal.set(Calendar.DATE, 1);
-		cal.set(Calendar.HOUR, 0); // Zero out the Hour
-		cal.set(Calendar.MINUTE, 0); // Zero out the Minute
-		cal.set(Calendar.SECOND, 0); // Zero out the Second
-		cal.set(Calendar.MILLISECOND, 0); // Zero out the Millisecond		
-		Date dtMinSysDate = cal.getTime();
-		
-		cal.set(Calendar.YEAR, 2199);
-		cal.set(Calendar.MONTH, 11);//zero-based!
-		cal.set(Calendar.DATE, 31);		
-		Date dtMaxSysDate = cal.getTime();
-		
-		// Tell the calling function if the date falls outside of the system date range or not
-		return !(dtValue.before(dtMinSysDate) || dtValue.after(dtMaxSysDate));
-	}
-	
 	
 	// This class will be used in a List so the following will allow it to show the proper text in the list
 	@Override
@@ -162,25 +167,58 @@ public class CFieldItem {
 	}
 	
 	public String toXML(){
-		return "<FieldItem><Order>"+ Integer.toString(m_iOrder) + 
+		String result = "<FieldItem>";
+		result += addFieldsToXml();
+		
+		if (m_custFieldInfo != null) {
+			result += m_custFieldInfo.toXML();
+		}
+		
+		result += "</FieldItem>";
+				
+		return result;
+	}
+
+	protected String addFieldsToXml() {
+		return "<Order>"+ Integer.toString(m_iOrder) + 
 				"</Order><Caption>" + CXMLHelper.encodeTextForElement(m_sCaption) +
 				"</Caption><ElementName>"+ CXMLHelper.encodeTextForElement(m_sElementName) +
 				"</ElementName><FieldType>" + getFieldTypeAsString() +
 				"</FieldType><IsRoot>"+ (m_bIsAtRootElementLevel ? "T" : "F") + 
 				"</IsRoot><ParentElementName>"+ CXMLHelper.encodeTextForElement(m_sParentElementName) +
 				"</ParentElementName><RootElementName>" + CXMLHelper.encodeTextForElement(m_sRootElementName)+
-				"</RootElementName></FieldItem>";
+				"</RootElementName><Required>" + m_required + "</Required>"
+				+"<StringLength>"+ Integer.toString(m_stringLength) + "</StringLength>";
 	}
 	
 	private String getFieldTypeAsString(){
-		if(m_iFieldType == FieldItemType.Number) { return "N"; }// Number
-		else if(m_iFieldType == FieldItemType.Date){  return "D"; }// Date
-		else { return "S"; } // String
+		switch(m_iFieldType) {
+		case Number:
+			return "N";
+		case String:
+			return "S";
+		case Date:
+			return "D";
+		case ExclusiveChoice:
+			return "X";
+		default:
+			return "M";
+		}
 	}
+	
 	private FieldItemType getFieldTypeFromString(String sValue){		
-		if(sValue.equals("N")) { return FieldItemType.Number; }//Number
-		else if(sValue.equals("D")){ return FieldItemType.Date; }// date
-		else{ return FieldItemType.String; } // String
+		switch(sValue.charAt(0)) {
+		case 'N':
+			return FieldItemType.Number;
+		case 'S':
+			return FieldItemType.String;
+		case 'D':
+			return FieldItemType.Date;
+		case 'X':
+			return FieldItemType.ExclusiveChoice;
+		default:
+			return FieldItemType.MultipleChoice;
+		}
 	}
 
 	private void setFieldsFromElementValues(Element xeElement){
@@ -192,5 +230,32 @@ public class CFieldItem {
 		m_bIsAtRootElementLevel = CXMLHelper.getChildNodeValue(xeElement, "IsRoot", "T").equals("T");
 		m_sParentElementName= CXMLHelper.getChildNodeValue(xeElement, "ParentElementName", "");
 		m_sRootElementName = CXMLHelper.getChildNodeValue(xeElement, "RootElementName", "");
+		m_required = Boolean.parseBoolean(CXMLHelper.getChildNodeValue(xeElement, "Required"));
+		m_stringLength = Integer.parseInt(CXMLHelper.getChildNodeValue(xeElement, "StringLength", "250"));
+		Node customFields = CXMLHelper.getChildNode(xeElement, "CustomField");
+		if (customFields != null) {
+			m_custFieldInfo = CCustomFieldInfo.fromXML(xeElement);
+		}
+	}
+
+	public boolean isCustomTemplate() {
+		return m_custFieldInfo != null;
+	}
+	
+	public boolean isRequired() {
+		return m_required || (isCustomTemplate() && this.m_custFieldInfo.isRequired());
+	}
+
+	public CCustomFieldInfo getCustomInfo() {
+		return m_custFieldInfo;
+	}
+
+	public String getCaption() {
+		return m_sCaption;
+	}
+	
+	public CFieldItem setStringLength(int length) {
+		m_stringLength = length;
+		return this;
 	}
 }

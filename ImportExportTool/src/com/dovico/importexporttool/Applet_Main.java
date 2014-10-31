@@ -51,8 +51,8 @@ public class Applet_Main extends JApplet {
 	
 	// Called by the JavaScript to tell us what the settings are from the cookie/localStorage (without signing this app we don't have permission to access Preferences
 	// so we're doing a workaround instead) 
-	public void JSCallBackReturningSettingsData(String sConsumerSecret, String sUserToken, String sCompanyName, String sUserName, String sPassword, String sEmployeeID, String sEmployeeFirstName, String sEmployeeLastName){
-		m_UILogic.handlePageLoad(sConsumerSecret, sCompanyName, sUserName, sPassword, Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName);
+	public void JSCallBackReturningSettingsData(String sConsumerSecret, String sUserToken, String sCompanyName, String sUserName, String sPassword, String sEmployeeID, String sEmployeeFirstName, String sEmployeeLastName, String importPath, String exportPath){
+		m_UILogic.handlePageLoad(sConsumerSecret, sCompanyName, sUserName, sPassword, Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName, importPath, exportPath);
 	}
 	
 	
