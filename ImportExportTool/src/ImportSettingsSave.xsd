@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="State">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element type="xs:string" name="FilePath"/>
+        <xs:element type="xs:string" name="Destination"/>
+        <xs:element name="ColumnsInFile">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FieldItem" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element type="xs:byte" name="Order"/>
+                    <xs:element type="xs:string" name="Caption"/>
+                    <xs:element type="xs:string" name="ElementName"/>
+                    <xs:element type="xs:string" name="FieldType"/>
+                    <xs:element type="xs:string" name="IsRoot"/>
+                    <xs:element type="xs:string" name="ParentElementName"/>
+                    <xs:element type="xs:string" name="RootElementName"/>
+                    <xs:element name="CustomField" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:byte" name="TemplateID"/>
+                          <xs:element type="xs:string" name="Required"/>
+                          <xs:element type="xs:string" name="Hide"/>
+                          <xs:element name="Values">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element name="Value" maxOccurs="unbounded" minOccurs="0">
+                                  <xs:complexType>
+                                    <xs:sequence>
+                                      <xs:element type="xs:string" name="Default"/>
+                                      <xs:element type="xs:string" name="Value"/>
+                                    </xs:sequence>
+                                  </xs:complexType>
+                                </xs:element>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="CurrentMappings">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="FieldItemMap" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="Source">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="FieldItem">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:byte" name="Order"/>
+                                <xs:element type="xs:string" name="Caption"/>
+                                <xs:element type="xs:string" name="ElementName"/>
+                                <xs:element type="xs:string" name="FieldType"/>
+                                <xs:element type="xs:string" name="IsRoot"/>
+                                <xs:element type="xs:string" name="ParentElementName"/>
+                                <xs:element type="xs:string" name="RootElementName"/>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                    <xs:element name="Destination">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element name="FieldItem">
+                            <xs:complexType>
+                              <xs:sequence>
+                                <xs:element type="xs:byte" name="Order"/>
+                                <xs:element type="xs:string" name="Caption"/>
+                                <xs:element type="xs:string" name="ElementName"/>
+                                <xs:element type="xs:string" name="FieldType"/>
+                                <xs:element type="xs:string" name="IsRoot"/>
+                                <xs:element type="xs:string" name="ParentElementName"/>
+                                <xs:element type="xs:string" name="RootElementName"/>
+                              </xs:sequence>
+                            </xs:complexType>
+                          </xs:element>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
