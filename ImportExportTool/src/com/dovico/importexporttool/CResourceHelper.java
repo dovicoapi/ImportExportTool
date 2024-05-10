@@ -9,9 +9,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
+import jakarta.xml.bind.*;
 
 import org.w3c.dom.Document;
 

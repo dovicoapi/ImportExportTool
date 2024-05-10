@@ -8,7 +8,7 @@
 
 package com.dovico.importexporttool.xsd.settings;
 
-import javax.xml.bind.annotation.XmlRegistry;
+import jakarta.xml.bind.annotation.*;
 
 
 /**

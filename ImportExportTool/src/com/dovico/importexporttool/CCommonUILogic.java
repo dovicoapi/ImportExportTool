@@ -94,7 +94,7 @@ public class CCommonUILogic {
 		m_pTabControl.addTab("Settings", null, m_pSettingsTab, null);
 		
 		// Create our About Tab panel and add it to our tab control
-		m_pAboutTab = new CPanel_About("Import/Export Tool", "2.0"); 
+		m_pAboutTab = new CPanel_About("Import/Export Tool", "2.1"); 
 		m_pTabControl.addTab("About", null, m_pAboutTab, null);
 	}
 	
@@ -108,7 +108,7 @@ public class CCommonUILogic {
 	{ 
 		// We will hide the Consumer Secret field if the constant for the token is not an empty string. Pass the proper consumer secret value to our parent class
 		// if the constant was specified. If not, use the token that was last saved by the user.
-		boolean bHideConsumerSecretField = !Constants.CONSUMER_SECRET_API_TOKEN.isEmpty();
+		//boolean bHideConsumerSecretField = !Constants.CONSUMER_SECRET_API_TOKEN.isEmpty();
 		
 		m_sCompanyName = sCompanyName;
 		m_sUserName = sUserName;
@@ -134,7 +134,7 @@ public class CCommonUILogic {
 		// Tell the Settings pane what the settings are (we are not concerned about the logged in employee's First and Last name in this app but rather than have
 		// to write upgrade code, like the code to come below, if that ever changes, we grab and store the values just in case)
 		m_pSettingsTab.setSettingsData(Constants.CONSUMER_SECRET_API_TOKEN, sDataAccessToken, sCompanyName, sUserName, sPassword, Constants.API_VERSION_TARGETED, m_lEmployeeID, m_sEmployeeFirstName, 
-				m_sEmployeeLastName, bHideConsumerSecretField);
+				m_sEmployeeLastName/*, bHideConsumerSecretField*/);
 		
 		// If the Employee ID is 0 and the consumer secret and data access token have values then...(that means this application was run before the new functionality
 		// was added to the settings panel to grab the employee id/name and we now need to grab the employee id/name)
