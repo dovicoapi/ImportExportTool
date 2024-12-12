@@ -181,11 +181,11 @@ public class Dialog_ImportFieldMapping extends JDialog {
 	
 	
 	// Call this function before you show this dialog so that the lists are populated properly based on the Selected file and currently selected items	
-	public void setSourceColumnsDestinationAndMapping(String consumerSecret, String userToken, ArrayList<CFieldItem> alColumnsFromTheFile, String sDestination, ArrayList<CFieldItemMap> alCurrentMappings){
+	public void setSourceColumnsDestinationAndMapping(boolean isDBV13, String consumerSecret, String userToken, ArrayList<CFieldItem> alColumnsFromTheFile, String sDestination, ArrayList<CFieldItemMap> alCurrentMappings){
 		// Fill the source list with the columns that are in the file, fill the destination list with the fields that match the selected destination, and then
 		// fill the mapping table with the current mappings
 		fillSourceList(alColumnsFromTheFile);
-		fillDestinationList(sDestination, consumerSecret, userToken);
+		fillDestinationList(isDBV13, sDestination, consumerSecret, userToken);
 		fillMappingTable(alCurrentMappings);				
 	}
 	
@@ -198,10 +198,10 @@ public class Dialog_ImportFieldMapping extends JDialog {
 	
 	
 	// Helper that fills the Destination list with the fields available for the selected destination
-	private void fillDestinationList(String sDestination, String consumerSecret, String userToken) {
+	private void fillDestinationList(boolean isDBV13, String sDestination, String consumerSecret, String userToken) {
 		// Create a Generic list for the Destination fields. Get the fields based on the specified destination passed in
 		ArrayList<CFieldItem> alDestinationFields = new ArrayList<CFieldItem>();
-		CResourceHelper.getAPIFieldsForResource(sDestination, consumerSecret, userToken, false, alDestinationFields);
+		CResourceHelper.getAPIFieldsForResource(isDBV13, sDestination, consumerSecret, userToken, false, alDestinationFields);
 		
 		// Loop through the fields adding them to the Destination list
 		for (CFieldItem fiFieldItem : alDestinationFields) { m_lmDestinationModel.addElement(fiFieldItem); }

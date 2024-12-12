@@ -131,7 +131,7 @@ public class CResourceHelper {
 	// / <modified author="C. Gerard Gallant" date="2012-08-22"
 	// reason="Added logic for expense categories"/>
 	// / </history>
-	public static String getURIForResource(String sResource,
+	public static String getURIForResource(boolean isDBV13, String sResource,
 			boolean bReturnExportURI, Long lEmployeeID, Date dtDateRangeStart,
 			Date dtDateRangeEnd) {
 		String sURI = "";
@@ -185,8 +185,14 @@ public class CResourceHelper {
 
 			// If the URI was requested for an Export (GET) then...
 			if (bReturnExportURI) {
+				// Originally Timesheet Expenses matched v13's structure where there was a single project for all expense entries
+				// and the project & manager ids where returned as part of the sheet node. Timesheet was modified so that an expense
+				// sheet can have expense entries belonging to different projects. The result is that existing API calls no longer
+				// return a non-zero value for project/manager properties because there could be multiple ids. A version=7 of the API
+				// was created where the project/manager ids are now returned as part of the expense entry node rather than the 
+				// expense sheet node. If this is not v13, we need to change the API version to 7+.
 				sURI = CRESTAPIHelper.buildURI("ExpenseEntries/", buildDateRangeQueryString(dtDateRangeStart, dtDateRangeEnd),
-						Constants.API_VERSION_TARGETED);
+						(isDBV13 ? Constants.API_VERSION_TARGETED : Constants.API_VERSION_TARGETED_EXPENSE_GET_TIMESHEET_DB));
 			} else { // The URI is for an Import (POST)...
 				// If we are logged in with the Admin user token then set the
 				// query string to 'approved=T' so that the expenses are entered
@@ -220,7 +226,7 @@ public class CResourceHelper {
 	// / <modified author="C. Gerard Gallant" date="2012-08-22"
 	// reason="Added logic for expense categories"/>
 	// / </history>
-	public static void getAPIFieldsForResource(String sResource,
+	public static void getAPIFieldsForResource(boolean isDBV13, String sResource,
 			String consumerSecret, String userToken,
 			boolean bReturnExportFields, ArrayList<CFieldItem> alReturnAPIFields) {
 		if (sResource.equals(Constants.API_RESOURCE_ITEM_CLIENTS)) {
@@ -240,7 +246,7 @@ public class CResourceHelper {
 					alReturnAPIFields);
 		} else if (sResource
 				.equals(Constants.API_RESOURCE_ITEM_EXPENSE_ENTRIES)) {
-			getAPIFieldsForExpenseEntries(bReturnExportFields, consumerSecret, userToken,
+			getAPIFieldsForExpenseEntries(isDBV13, bReturnExportFields, consumerSecret, userToken,
 					alReturnAPIFields);
 		} else if (sResource.equals(Constants.API_RESOURCE_ITEM_TEAMS)) {
 			getAPIFieldsForTeams(bReturnExportFields, consumerSecret, userToken, alReturnAPIFields);
@@ -865,7 +871,7 @@ public class CResourceHelper {
 	// / <modified author="C. Gerard Gallant" date="2012-03-20"
 	// reason="Added a '* ' preceding fields that are required for an import so that user's don't have to use trial and error or reference the API documentation to get the import to work correctly"/>
 	// / </history>
-	private static void getAPIFieldsForExpenseEntries(
+	private static void getAPIFieldsForExpenseEntries(boolean isDBV13,
 			boolean bReturnExportFields, String consumerSecret, String userToken, ArrayList<CFieldItem> alReturnAPIFields) {
 		// Expense Entry data is in two parts: The Sheet and the Entries
 		int iOrder = 0;
@@ -889,18 +895,24 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Employee Name",
 					"Name", CFieldItem.FieldItemType.String, false, "Employee",
 					MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager ID", "ID",
-					CFieldItem.FieldItemType.Number, false, "Manager",
-					MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager Name",
-					"Name", CFieldItem.FieldItemType.String, false, "Manager",
-					MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ID",
-					CFieldItem.FieldItemType.Number, false, "Project",
-					MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
-			alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Name",
-					"Name", CFieldItem.FieldItemType.String, false, "Project",
-					MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
+
+			// The Expense Sheet holds these values in v13 but they're in the Expense Entry
+			// return data in Timesheet.
+			if(isDBV13) {
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager ID", "ID",
+						CFieldItem.FieldItemType.Number, false, "Manager",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager Name",
+						"Name", CFieldItem.FieldItemType.String, false, "Manager",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ID",
+						CFieldItem.FieldItemType.Number, false, "Project",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Name",
+						"Name", CFieldItem.FieldItemType.String, false, "Project",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
+			} // End if(isDBV13)
+			
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Status", "Status",
 					CFieldItem.FieldItemType.String, true, "",
 					MAIN_ELEMENT_NAME_FOR_EXPENSE_SHEETS, false));
@@ -954,6 +966,24 @@ public class CResourceHelper {
 			alReturnAPIFields.add(new CFieldItem(iOrder++, "Expense Entry ID",
 					"ID", CFieldItem.FieldItemType.Number, true, "",
 					MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES, false));
+			
+			// The Expense Sheet holds these values in v13 but they're in the Expense Entry
+			// return data in Timesheet.
+			if(!isDBV13) {
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager ID", "ID",
+						CFieldItem.FieldItemType.Number, false, "Manager",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES, false));
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Manager Name",
+						"Name", CFieldItem.FieldItemType.String, false, "Manager",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES, false));
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Project ID", "ID",
+						CFieldItem.FieldItemType.Number, false, "Project",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES, false));
+				alReturnAPIFields.add(new CFieldItem(iOrder++, "Project Name",
+						"Name", CFieldItem.FieldItemType.String, false, "Project",
+						MAIN_ELEMENT_NAME_FOR_EXPENSE_ENTRIES, false));
+			} // End if(isDBV13)			
+			
 			alReturnAPIFields.add(new CFieldItem(iOrder++,
 					"Expense Category ID", "ID",
 					CFieldItem.FieldItemType.Number, false, "ExpenseCategory",

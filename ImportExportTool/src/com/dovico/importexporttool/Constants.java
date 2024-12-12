@@ -18,6 +18,7 @@ public class Constants {
 	public static String PREFS_KEY_EMPLOYEE_LAST = "EmployeeLastName";
 	public static String PREFS_IMPORT_PATH = "ImportPath";
 	public static String PREFS_EXPORT_PATH = "ExportPath";
+	public static String PREFS_KEY_IS_DB_V13 = "IsDBV13";
 
 	public static String NEXT_PAGE_URI = "NextPageURI";
 	public static String GET_EXPENSE_ENTRY_ITEMS_URI = "GetExpenseEntryItemsURI";
@@ -51,6 +52,7 @@ public class Constants {
 
 	// The API version that we are targeting
 	public static String API_VERSION_TARGETED = "4";
+	public static String API_VERSION_TARGETED_EXPENSE_GET_TIMESHEET_DB = "7";
 
 	public static String IMPORT_STATE_FILE_NAME = "importstate.xml";
 	public static String EXPORT_STATE_FILE_NAME = "exportstate.xml";

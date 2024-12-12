@@ -177,7 +177,7 @@ public class Dialog_ExportFields extends JDialog {
 	
 	
 	// Call this function before you show this dialog so that the lists can be populated properly based on the Selected Data source and currently selected items	
-	public void setDataSourceAndSelectedFields(String sSelectedDataSource, String consumerSecret, String userToken, Object[] arrSelectedFieldValues) {
+	public void setDataSourceAndSelectedFields(boolean isDBV13, String sSelectedDataSource, String consumerSecret, String userToken, Object[] arrSelectedFieldValues) {
 		// First things first. Add the selected values to the Selected list (so that things are added in the order that they were last selected - if we did this
 		// in the following loop then they would get added in the default sort order)
 		for (Object objField : arrSelectedFieldValues) { m_lmSelectedFieldsModel.addElement(objField); } 
@@ -185,7 +185,7 @@ public class Dialog_ExportFields extends JDialog {
 	
 		// Create a Generic list for the Available fields for the selected Data Source and then get the field values
 		ArrayList<CFieldItem> alAvailableFields = new ArrayList<CFieldItem>();
-		CResourceHelper.getAPIFieldsForResource(sSelectedDataSource, consumerSecret, userToken, true, alAvailableFields);
+		CResourceHelper.getAPIFieldsForResource(isDBV13, sSelectedDataSource, consumerSecret, userToken, true, alAvailableFields);
 				
 		// Loop through the available fields...
 		for (CFieldItem fiFieldItem : alAvailableFields) {

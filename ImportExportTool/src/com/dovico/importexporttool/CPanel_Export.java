@@ -350,7 +350,7 @@ public class CPanel_Export extends JPanel {
 		Dialog_ExportFields dlgFields = new Dialog_ExportFields();
 		String dataAccessToken = m_UILogic.getDataAccessToken();
 		String consumerSecret = Constants.CONSUMER_SECRET_API_TOKEN;
-		dlgFields.setDataSourceAndSelectedFields((String)m_ddlDataSource.getSelectedItem(), consumerSecret, dataAccessToken, m_lmFieldsModel.toArray());
+		dlgFields.setDataSourceAndSelectedFields(m_UILogic.getIsDBV13(), (String)m_ddlDataSource.getSelectedItem(), consumerSecret, dataAccessToken, m_lmFieldsModel.toArray());
 		dlgFields.setVisible(true);
 		
 		// If the dialog was closed as a result of the user clicking on the OK button then...
@@ -408,7 +408,7 @@ public class CPanel_Export extends JPanel {
 		final Hashtable<Component, Boolean> state = setState(null, false);
 		final IExportFormatter fFormatter = (IExportFormatter)m_ddlFormat.getSelectedItem();
 		final String sDataSource = (String)m_ddlDataSource.getSelectedItem();
-		final String sURI = CResourceHelper.getURIForResource(sDataSource, true, m_UILogic.getEmployeeID(), m_dtDateRangeStart, m_dtDateRangeEnd);
+		final String sURI = CResourceHelper.getURIForResource(m_UILogic.getIsDBV13(), sDataSource, true, m_UILogic.getEmployeeID(), m_dtDateRangeStart, m_dtDateRangeEnd);
 		final String sMainElementName = CResourceHelper.getMainElementNameForResource(sDataSource);			
 		final ArrayList<CFieldItem> alFields = getFieldItemsArrayList();
 

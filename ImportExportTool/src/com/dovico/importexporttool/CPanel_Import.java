@@ -326,7 +326,7 @@ public class CPanel_Import extends JPanel {
 		Dialog_ImportFieldMapping dlgMapping = new Dialog_ImportFieldMapping();
 		String userToken = m_UILogic.getDataAccessToken();
 		String consumerSecret = Constants.CONSUMER_SECRET_API_TOKEN;
-		dlgMapping.setSourceColumnsDestinationAndMapping(consumerSecret,
+		dlgMapping.setSourceColumnsDestinationAndMapping(m_UILogic.getIsDBV13(), consumerSecret,
 				userToken, m_alColumnsInTheFile,
 				(String) m_ddlDestination.getSelectedItem(),
 				m_alCurrentMappings);
@@ -572,7 +572,7 @@ public class CPanel_Import extends JPanel {
 						// for debugging purposes.
 						// logXML(sXML);
 
-						String sURI = CResourceHelper.getURIForResource(
+						String sURI = CResourceHelper.getURIForResource(m_UILogic.getIsDBV13(),
 								sResource, false, lEmployeeID, null, null);// the
 																			// dates
 																			// are

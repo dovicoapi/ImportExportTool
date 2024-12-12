@@ -10,6 +10,13 @@ import java.util.prefs.Preferences;
 
 import javax.swing.JFrame;
 
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import com.dovico.commonlibrary.APIRequestResult;
+import com.dovico.commonlibrary.CRESTAPIHelper;
+import com.dovico.commonlibrary.CXMLHelper;
+
 
 public class Form_Main {
 	
@@ -54,8 +61,9 @@ public class Form_Main {
 				String sEmployeeLastName = prefs.get(Constants.PREFS_KEY_EMPLOYEE_LAST, "");
 				String importPath = prefs.get(Constants.PREFS_IMPORT_PATH, "");
 				String exportPath = prefs.get(Constants.PREFS_EXPORT_PATH, "");
+				boolean isDBV13 = (prefs.get(Constants.PREFS_KEY_IS_DB_V13, "") == "T");
 												
-				m_UILogic.handlePageLoad(sDataAccessToken, sCompanyName, sUserName, "", Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName, importPath, exportPath); 
+				m_UILogic.handlePageLoad(sDataAccessToken, sCompanyName, isDBV13, sUserName, "", Long.valueOf(sEmployeeID), sEmployeeFirstName, sEmployeeLastName, importPath, exportPath); 
 			}
 		});
 		m_frmDovicoImportExport.setTitle("DOVICO - Import/Export Tool");
@@ -79,6 +87,8 @@ public class Form_Main {
 				String sConsumerSecretToSave = m_UILogic.getConsumerSecret();
 				if(sConsumerSecretToSave.equals(Constants.CONSUMER_SECRET_API_TOKEN)){ sConsumerSecretToSave = ""; }
 				
+				// Determine if we're connected to a v13 or Timesheet database				
+				m_UILogic.setIsDBV13(isDatabaseV13());
 				
 				// Save the settings
 				Preferences prefs = Preferences.userNodeForPackage(Form_Main.class);
@@ -91,7 +101,24 @@ public class Form_Main {
 				prefs.put(Constants.PREFS_KEY_EMPLOYEE_LAST, m_UILogic.getEmployeeLastName());
 				prefs.put(Constants.PREFS_EXPORT_PATH, m_UILogic.getExportPath());
 				prefs.put(Constants.PREFS_IMPORT_PATH, m_UILogic.getImportPath());
+				prefs.put(Constants.PREFS_KEY_IS_DB_V13, (m_UILogic.getIsDBV13() ? "T" :"F"));
 			}
 		};
+	}
+	
+	private boolean isDatabaseV13() {
+		String sURI = CRESTAPIHelper.buildURI("ApiInfo/", "", Constants.API_VERSION_TARGETED);
+		
+		// Request the ApiInfo record (info of the person logging in)
+		APIRequestResult arResult = CRESTAPIHelper.makeAPIRequest(sURI, "GET", null, m_UILogic.getConsumerSecret(), m_UILogic.getDataAccessToken());	
+		Element xeDocElement = arResult.getResultDocument().getDocumentElement();
+		
+		// From the Result element, get the first element APIInfo
+		NodeList xnlElements = xeDocElement.getElementsByTagName("APIInfo");
+		Element xeAPIInfo = (Element)xnlElements.item(0);
+		String BuildValue = CXMLHelper.getChildNodeValue(xeAPIInfo, "Build", "");
+
+		// Tell the caller if the current database is a v13 or Timesheet database (Timesheet starts with 14.)
+		return BuildValue.startsWith("13.");
 	}	
 }

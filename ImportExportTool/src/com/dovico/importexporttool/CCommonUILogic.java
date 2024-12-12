@@ -31,6 +31,7 @@ public class CCommonUILogic {
 	private Long m_lEmployeeID = null;
 	private String m_sEmployeeFirstName = "";
 	private String m_sEmployeeLastName = "";
+	private boolean m_isDBV13 = true;
 
 	private String m_importPath;
 
@@ -104,7 +105,7 @@ public class CCommonUILogic {
     /// <modified author="C. Gerard Gallant" date="2011-12-14" reason="Now receives lEmployeeID, sEmployeeFirstName, and sEmployeeLastName parameters. Also added logic to grab the employee id if we already have token values (for those who have already run this app before the employee id functionality was added in)"/>
 	/// <modified author="C. Gerard Gallant" date="2012-04-20" reason="Added code to use the constant for the Consumer Secret if it exists. Code has also been added to tell the Settings pane not to show the Consumer Secret text box if the constant has a value."/>
 	/// </history>
-	public void handlePageLoad(String sDataAccessToken, String sCompanyName, String sUserName, String sPassword, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName, String importPath, String exportPath) 
+	public void handlePageLoad(String sDataAccessToken, String sCompanyName, boolean isDBV13, String sUserName, String sPassword, Long lEmployeeID, String sEmployeeFirstName, String sEmployeeLastName, String importPath, String exportPath) 
 	{ 
 		// We will hide the Consumer Secret field if the constant for the token is not an empty string. Pass the proper consumer secret value to our parent class
 		// if the constant was specified. If not, use the token that was last saved by the user.
@@ -149,6 +150,7 @@ public class CCommonUILogic {
 				m_lEmployeeID = m_pSettingsTab.getEmployeeID();
 				m_sEmployeeFirstName = m_pSettingsTab.getEmployeeFirstName();
 				m_sEmployeeLastName = m_pSettingsTab.getEmployeeLastName();
+				m_isDBV13 = isDBV13;				
 	    		m_alSettingsChanged.actionPerformed(null);
 			} // End if(!m_pSettingsTab.validateSettingsData())
 		} // End if(m_lEmployeeID == 0 && !bIsConsumerSecretEmpty && !bIsDataAccessTokenEmpty)
@@ -218,4 +220,7 @@ public class CCommonUILogic {
 	public String getExportPath() { return m_exportPath; }
 	public void setImportPath(String path) { m_importPath = path; m_alSettingsChanged.actionPerformed(null); }
 	public void setExportPath(String path) { m_exportPath = path; m_alSettingsChanged.actionPerformed(null); }
+	
+	public boolean getIsDBV13() { return m_isDBV13; }
+	public void setIsDBV13(boolean isDBV13) { m_isDBV13 = isDBV13; }
 }
